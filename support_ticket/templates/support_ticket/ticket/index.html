@@ -1,0 +1,197 @@
+{% extends "cis/logged-base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% load crispy_forms_tags %}
+
+{% block body %}
+<main>
+    <div class="">
+        <div class="row">
+            <div class="col-sm-6 col-xs-12">
+                <h1 class="h3 mb-4 text-gray-800">{{ page_title }}&nbsp;
+                    {% if can_start %}<a class="btn btn-primary btn-sm small collapsed" data-toggle="collapse"
+                        href="#addNewSupportRequest" role="button" aria-expanded="false"
+                        aria-controls="addNewSupportRequest"><i class="fa fa-plus"></i>&nbsp;Add New Request</a>{% endif %}
+                </h1>
+            </div>
+        </div>
+
+        {% if messages %}
+        <div class="row">
+            <div class="col-12">
+                <ul class="messages list-group">
+                    {% for message in messages %}
+                    <li{% if message.tags %} class="list-group-item {{ message.tags }}"{% endif %}>
+                        {{ message }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        <script>
+            jQuery(document).ready(function ($) {
+                $(document).on("submit", "form#frm_add_support_request", function (event) {
+                    let ajaxurl = "{% url 'cis:add_new_ajax' %}";
+                    let form = this;
+                    $("form#frm_add_support_request").block({ message: 'Please wait...' });
+                    $.ajax({
+                        type: "POST",
+                        url: ajaxurl,
+                        data: $("form#frm_add_support_request").serialize() + "&action=add_new_support_request&model=supportrequest",
+                        success: function (response) {
+                            if (response.status == 'error') {
+                                alert(response.message);
+                                $(form).replaceWith(response.form_html);
+                            } else {
+                                alert(response.message);
+                                window.location.reload();
+                            }
+                        }
+                    });
+                    event.preventDefault();
+                });
+
+                $(document).on("change", "select#id_send_to, select#id_highschool", function (event) {
+                    let ajaxurl = "{% url 'cis:add_new_ajax' %}";
+                    $("form#frm_add_support_request").block({ message: 'Please wait...' });
+                    $.ajax({
+                        type: "POST",
+                        url: ajaxurl,
+                        data: $("form#frm_add_support_request").serialize() + "&action=refresh_addSupportRequest&model=supportrequest",
+                        success: function (response) {
+                            $("form#frm_add_support_request").unblock();
+                            $("form#frm_add_support_request").replaceWith(response.form_html);
+                        }
+                    });
+                    event.preventDefault();
+                });
+            });
+        </script>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="collapse multi-collapse" id="addNewSupportRequest">
+                    <div class="card card-body">
+                        <h4>Add New Support Request</h4>
+                        <form action="" method="post" id="frm_add_support_request">
+                            {% csrf_token %}
+                            {{ add_new_request_form | crispy }}
+                            <input type="submit" class="btn btn-primary btn-sm" value="Add Request">
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <ul class="nav nav-tabs mb-3">
+            <li class="nav-item">
+                <a class="nav-link active" href="{% url 'support_ticket:requests' %}">Requests</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'support_ticket:summary' %}">Summary</a>
+            </li>
+        </ul>
+
+        <div class="row mb-2">
+          <div class="col-sm-3">
+            <label class="small mb-0">Status</label>
+            <select id="filter_status" class="form-control form-control-sm">
+              <option value="">All statuses</option>
+              {% for s in statuses %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="col-sm-3">
+            <label class="small mb-0">Assigned To</label>
+            <select id="filter_assigned" class="form-control form-control-sm">
+              <option value="">All assignees</option>
+              <option value="unassigned">Unassigned</option>
+              {% for u in ce_users %}<option value="{{ u.id }}">{{ u.last_name }}, {{ u.first_name }}</option>{% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="row table-responsive" style="min-height: 500px;">
+            <table id="support-ticket-table" class="table table-striped" style="width:100%">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Type</th>
+                        <th>Submitted By</th>
+                        <th>Assigned To</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th>Updated</th>
+                        <th>Files</th>
+                        <th></th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+
+        <script>
+jQuery(function ($) {
+    var table = $('#support-ticket-table').DataTable({
+        serverSide: true,
+        processing: true,
+        stateSave: true,
+        dom: 'lBfrtip',
+        rowId: 'id',
+        select: { style: 'multi', selector: 'td:first-child' },
+        buttons: [
+            { extend: 'csv', className: 'btn btn-sm btn-primary text-white',
+              text: '<i class="fas fa-file-csv"></i>&nbsp;CSV',
+              titleAttr: 'Export current view to CSV',
+              exportOptions: { columns: ':not(:first-child):not(:last-child)' } },
+            { extend: 'pdfHtml5', className: 'btn btn-sm btn-primary text-white',
+              text: '<i class="fas fa-file-pdf"></i>&nbsp;PDF',
+              titleAttr: 'Export current view to PDF',
+              exportOptions: { columns: ':not(:first-child):not(:last-child)' } },
+            { text: '<i class="fas fa-exchange-alt"></i>&nbsp;Update Status',
+              className: 'btn btn-sm btn-warning text-white',
+              action: function (e, dt) {
+                window.ActionRegistry.doBulkAction("{% url 'support_ticket:bulk_actions' %}", 'bulk_update_status', dt);
+              } },
+            { text: '<i class="fas fa-user-edit"></i>&nbsp;Update Assigned To',
+              className: 'btn btn-sm btn-info text-white',
+              action: function (e, dt) {
+                window.ActionRegistry.doBulkAction("{% url 'support_ticket:bulk_actions' %}", 'bulk_update_assigned_to', dt);
+              } },
+        ],
+        ajax: {
+            url: '{{ api_url }}',
+            data: function (d) {
+                d.status = $('#filter_status').val();
+                d.assigned_to = $('#filter_assigned').val();
+            },
+        },
+        order: [[5, 'desc']],
+        columns: [
+            { data: null, defaultContent: '', orderable: false, className: 'select-checkbox' },
+            { data: 'ticket_type_name', name: 'ticket_type__name' },
+            { data: 'submitter_name',   name: 'submitted_by__last_name' },
+            { data: 'assignee_name',    name: 'assigned_to__last_name' },
+            { data: 'status',           name: 'status' },
+            { data: 'submitted_on',     name: 'submitted_on' },
+            { data: 'last_updated_on',  name: 'last_updated_on' },
+            { data: 'attachment_count', name: 'attachment_count', searchable: false, orderable: false },
+            { data: 'detail_url',       name: 'detail_url',       searchable: false, orderable: false,
+              render: function (url) {
+                return "<a class='btn btn-sm btn-primary record-details' refresh-target='table' href='" + url + "'>Open</a>";
+              } },
+        ],
+    });
+    window.table = table;
+    window.refreshTable = function () {
+        if (window.table) {
+            window.table.rows().deselect();
+            window.table.ajax.reload(null, false);
+        }
+    };
+    $('#filter_status, #filter_assigned').on('change', function () { table.ajax.reload(); });
+});
+</script>
+    </div>
+</main>
+{% endblock %}

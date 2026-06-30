@@ -1,0 +1,76 @@
+{% extends "cis/logged-base.html" %}
+{% load static %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block body %}
+<main>
+    <div class="">
+        <div class="row">
+            <div class="col-sm-6 col-xs-12">
+                <h1 class="h3 mb-4 text-gray-800">{{ page_title }}</h1>
+            </div>
+        </div>
+
+        <ul class="nav nav-tabs mb-3">
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'support_ticket:requests' %}">Requests</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="{% url 'support_ticket:summary' %}">Summary</a>
+            </li>
+        </ul>
+
+        <div class="row">
+            <div class="col-md-4">
+                <canvas id="chart_status"></canvas>
+            </div>
+            <div class="col-md-4">
+                <canvas id="chart_type"></canvas>
+            </div>
+            <div class="col-md-4">
+                <canvas id="chart_assignee"></canvas>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="{% static 'support_ticket/js/chart.umd.min.js' %}"></script>
+<script>
+jQuery(function ($) {
+    var base = '{{ summary_url_base }}';
+
+    function draw(canvasId, groupBy, kind) {
+        $.getJSON(base + '?group_by=' + groupBy + '&format=datatables&length=1000', function (resp) {
+            var labels = resp.data.map(function (r) { return r.group; });
+            var counts = resp.data.map(function (r) { return r.count; });
+            new Chart(document.getElementById(canvasId), {
+                type: kind,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Tickets by ' + groupBy,
+                        data: counts,
+                        backgroundColor: [
+                            'rgba(78, 115, 223, 0.7)',
+                            'rgba(28, 200, 138, 0.7)',
+                            'rgba(231, 74, 59, 0.7)',
+                            'rgba(246, 194, 62, 0.7)',
+                            'rgba(54, 185, 204, 0.7)',
+                        ],
+                    }],
+                },
+                options: {
+                    plugins: {
+                        title: { display: true, text: 'Tickets by ' + groupBy },
+                    },
+                },
+            });
+        });
+    }
+
+    draw('chart_status', 'status', 'doughnut');
+    draw('chart_type', 'type', 'bar');
+    draw('chart_assignee', 'assignee', 'bar');
+});
+</script>
+{% endblock %}

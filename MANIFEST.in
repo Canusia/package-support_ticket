@@ -1,0 +1,9 @@
+include LICENSE
+include README.md
+include CLAUDE.md
+recursive-include support_ticket/templates *
+recursive-include support_ticket/staticfiles *
+recursive-include support_ticket/migrations *.py
+recursive-include support_ticket/management *
+global-exclude *.pyc
+prune __pycache__

@@ -1,0 +1,148 @@
+{% extends "cis/logged-base.html" %}
+{%block title %}{{ page_title }}{% endblock %}
+
+{% load templatehelpers %}
+{% load crispy_forms_tags %}
+
+{% block body %}
+<script>
+    jQuery(function ($) {
+        /* $('.ui.search').search({
+            apiSettings: {
+                url: "{% url 'cis:district_ajax_search' %}?q={query}"
+            },
+            fields: {
+                results: 'items',
+                title: 'name',
+                url: 'html_url'
+            },
+            minCharacters: 3
+        }); */
+
+        $('.dataTable').DataTable();
+    });
+</script>
+<div class="">
+    <div class="row">
+        <div class="col-md-6 col-sm-12">
+            <h1 class="h3 mt-3 text-gray-800 mb-3">{{ record.name }}</h1>
+        </div>
+    </div>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url urls.all_items %}?{% query_transform %}">{{ labels.all_items }}</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">{{ record.submitted_on }}</li>
+        </ol>
+    </nav>
+</div>
+<main>
+    <div class="">
+        <div class="row">
+            {% if messages %}
+            <div class="col-md-12">
+                <ul class="messages list-group mb-3">
+                    {% for message in messages %}
+                    <li{% if message.tags %} class="list-group-item {{ message.tags }}" {% endif %}>
+                        {{ message }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            <div class="col-md-4 col-sm-12 mb-4">
+                    <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Add New Note</h5>
+                                <form action="" id="form_add_note" method="post" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    {{ noteform | crispy }}
+        
+                                    <input type="submit" name="add_note" class="btn btn-primary btn-sm" value="Add Note">
+                                </form>
+                            </div>
+                        </div>
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Request Details</h5>
+                        <p><strong>Submitted By: </strong>{{record.submitted_by}}, {{record.submitted_by.email}}</p>
+                        <p><strong>Request Type: </strong>{{record.ticket_type}}</p>
+                        <p><strong>Request: </strong>{{record.message}}</p>
+                        <p><strong>Attachments: </strong>
+                        {% for a in record.attachments.all %}
+                            <div><a href="{{ a.media.url }}" target="_blank"><i class="fas fa-paperclip"></i> {{ a.filename }}</a></div>
+                        {% endfor %}
+                        </p>
+                        <p><strong>Current Status: </strong>{{record.status}}</p>
+                        <hr>
+                        <h5 class="card-title">Manage Assignment</h5>
+                        <div class="card-text">
+                            
+                            <form action="" method="post" >
+                                {% csrf_token %}
+                                {{ form | crispy }}
+                                <input type="submit" class="btn btn-primary btn-sm" value="Update">
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+
+                    <script>
+                        jQuery(document).ready(function($) {
+                            $("input.delete").on("click", function() {
+                                if(!confirm("Are you sure you want to permanently delete this record?"))
+                                    return;
+                                window.location = "{% url 'support_ticket:delete_request' record.id%}";
+                            });
+                        });
+                    </script>
+                        <div class="card-body">
+                            <h5 class="card-title">Delete Ticket</h5>
+                            <div class="card-text">  
+                                <p class="alert alert-info">This will delete all notes and ticket information. The action cannot be reversed.</p>  
+                                <form action="" method="post" >
+                                    <input type="button" value="Delete" class="btn btn-danger btn-sm btn-block delete">
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+            <div class="col-md-8 col-sm-12">
+                <div class="card mb-4">
+                        <div class="card-body ">
+                                <h3 class="card-title">Request Updates</h3>
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Added On</th>
+                                                <th>Note</th>
+                                                <th>Added By</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for r in notes %}
+                                            <tr>
+                                                <td>{{r.createdon|date:'m/d/Y g:i a'}}</td>
+                                                <td>
+                                                    {{r.note}}<br>
+                                                    {% for a in r.attachments.all %}
+                                                        <a href="{{ a.media.url }}" target="_blank"><i class="fas fa-paperclip"></i> {{ a.filename }}</a><br>
+                                                    {% endfor %}
+                                                </td>
+                                                <td>{{r.createdby.first_name}} {{r.createdby.last_name}}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+{% endblock %}

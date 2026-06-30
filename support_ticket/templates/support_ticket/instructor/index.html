@@ -1,0 +1,52 @@
+{% extends "cis/logged-base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block body %}
+<main>
+    <div class="">
+        <div class="row">
+            <div class="col-sm-6 col-xs-12">
+                <h1 class="h3 mb-4 text-gray-800">{{ page_title }}&nbsp;
+                    {% if can_start %}<small><a href="{% url urls.add_new %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i>&nbsp;Add New</a></small>{% endif %}
+                </h1>
+            </div>
+        </div>
+
+        <div class="row table-responsive" style="min-height: 500px;">
+            <table id="support-ticket-table" class="table table-striped" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th>Updated</th>
+                        <th>Files</th>
+                        <th></th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+
+        <script>
+        jQuery(function ($) {
+            $('#support-ticket-table').DataTable({
+                serverSide: true,
+                processing: true,
+                stateSave: true,
+                ajax: '{{ api_url }}',
+                order: [[2, 'desc']],
+                columns: [
+                    { data: 'ticket_type_name', name: 'ticket_type__name' },
+                    { data: 'status',           name: 'status' },
+                    { data: 'submitted_on',     name: 'submitted_on' },
+                    { data: 'last_updated_on',  name: 'last_updated_on' },
+                    { data: 'attachment_count', name: 'attachment_count', searchable: false, orderable: false },
+                    { data: 'detail_url',       name: 'detail_url',       searchable: false, orderable: false,
+                      render: function (url) { return "<a class='btn btn-sm btn-primary' href='" + url + "'>Open</a>"; } },
+                ],
+            });
+        });
+        </script>
+    </div>
+</main>
+{% endblock %}
