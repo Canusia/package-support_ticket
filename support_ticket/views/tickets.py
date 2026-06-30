@@ -8,20 +8,20 @@ from django.http import JsonResponse
 
 from cis.utils import user_has_cis_role
 from cis.models.customuser import CustomUser
-from support_ticket.settings.support_ticket_settings import support_ticket_settings as STS
+from ..settings.support_ticket_settings import support_ticket_settings as STS
 
 from crispy_forms.utils import render_crispy_form
 
-from support_ticket.models.ticket import Ticket, TicketNote, TicketType
-from support_ticket.forms.types import (
+from ..models.ticket import Ticket, TicketNote, TicketType
+from ..forms.types import (
     SupportTicketForm, SupportTicketAssignmentForm,
     SupportTicketNoteForm, NewSupportTicketForm
 )
-from support_ticket.services import create_ticket_with_files, add_note_with_files
+from ..services import create_ticket_with_files, add_note_with_files
 
 from cis.menu import cis_menu, draw_menu
 
-from support_ticket.actions import ticket_actions
+from ..actions import ticket_actions
 
 
 @user_passes_test(user_has_cis_role, login_url='/')

@@ -13,10 +13,10 @@ from cis.models.highschool_administrator import (
 from cis.models.student import Student
 
 from cis.forms.note import NoteForm
-from support_ticket.constants import DEFAULT_STATUSES, ROLE_TO_APPLIES_TO
-from support_ticket.forms.fields import MultipleFileField
-from support_ticket.models.ticket import TicketType, Ticket
-from support_ticket.settings.support_ticket_settings import support_ticket_settings as STS
+from ..constants import DEFAULT_STATUSES, ROLE_TO_APPLIES_TO
+from .fields import MultipleFileField
+from ..models.ticket import TicketType, Ticket
+from ..settings.support_ticket_settings import support_ticket_settings as STS
 
 class TicketTypeForm(forms.ModelForm):
     class Meta:

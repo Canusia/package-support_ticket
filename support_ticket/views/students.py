@@ -5,10 +5,10 @@ from django.shortcuts import get_object_or_404, redirect, render
 from cis.utils import user_has_student_role
 from cis.menu import draw_menu, STUDENT_MENU
 
-from support_ticket.models.ticket import Ticket, TicketNote
-from support_ticket.forms.types import SupportTicketForm, SupportTicketNoteForm
-from support_ticket.services import create_ticket_with_files, add_note_with_files
-from support_ticket.settings.support_ticket_settings import support_ticket_settings as STS
+from ..models.ticket import Ticket, TicketNote
+from ..forms.types import SupportTicketForm, SupportTicketNoteForm
+from ..services import create_ticket_with_files, add_note_with_files
+from ..settings.support_ticket_settings import support_ticket_settings as STS
 
 
 @user_passes_test(user_has_student_role, login_url='/')

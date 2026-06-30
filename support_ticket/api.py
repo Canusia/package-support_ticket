@@ -2,9 +2,9 @@ from django.db.models import Count, F
 from rest_framework import mixins, viewsets
 
 from cis.utils import CIS_user_only
-from support_ticket.models.ticket import Ticket
-from support_ticket.serializers import TicketSerializer
-from support_ticket.permissions import IsStudent, IsInstructor, IsHSAdmin
+from .models.ticket import Ticket
+from .serializers import TicketSerializer
+from .permissions import IsStudent, IsInstructor, IsHSAdmin
 
 
 def _base_qs():
@@ -67,7 +67,7 @@ class HSAdminTicketViewSet(_BaseTicketViewSet):
     portal_detail_urlname = 'hs_admin_support_ticket:details'
 
     def get_queryset(self):
-        from support_ticket.services import tickets_for_hsadmin
+        from .services import tickets_for_hsadmin
         scoped = tickets_for_hsadmin(self.request.user)
         return _base_qs().filter(
             pk__in=scoped.values_list('pk', flat=True)).order_by('-submitted_on')
@@ -84,7 +84,7 @@ class TicketSummaryViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     }
 
     def get_serializer_class(self):
-        from support_ticket.serializers import TicketSummarySerializer
+        from .serializers import TicketSummarySerializer
         return TicketSummarySerializer
 
     def get_queryset(self):

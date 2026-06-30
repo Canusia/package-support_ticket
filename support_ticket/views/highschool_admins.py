@@ -5,10 +5,10 @@ from django.shortcuts import get_object_or_404, redirect, render
 from cis.utils import user_has_highschool_admin_role
 from cis.menu import draw_menu, HS_ADMIN_MENU
 
-from support_ticket.forms.types import SupportTicketForm, SupportTicketNoteForm
-from support_ticket.models.ticket import Ticket, TicketNote
-from support_ticket.services import create_ticket_with_files, add_note_with_files, tickets_for_hsadmin
-from support_ticket.settings.support_ticket_settings import support_ticket_settings as STS
+from ..forms.types import SupportTicketForm, SupportTicketNoteForm
+from ..models.ticket import Ticket, TicketNote
+from ..services import create_ticket_with_files, add_note_with_files, tickets_for_hsadmin
+from ..settings.support_ticket_settings import support_ticket_settings as STS
 
 
 @user_passes_test(user_has_highschool_admin_role, login_url='/')

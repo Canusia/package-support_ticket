@@ -4,8 +4,8 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
 
-from support_ticket.models.ticket import Ticket, TicketType
-from support_ticket.serializers import TicketSerializer
+from ..models.ticket import Ticket, TicketType
+from ..serializers import TicketSerializer
 
 User = get_user_model()
 

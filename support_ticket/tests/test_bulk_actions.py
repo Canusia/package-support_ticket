@@ -13,7 +13,7 @@ from django.contrib.auth.models import Group
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from support_ticket.models.ticket import Ticket, TicketType
+from ..models.ticket import Ticket, TicketType
 
 User = get_user_model()
 
@@ -254,7 +254,7 @@ class BulkUUIDGuardTests(TestCase):
 
     def setUp(self):
         from cis.models.settings import Setting
-        from support_ticket.settings.support_ticket_settings import support_ticket_settings as STS
+        from ..settings.support_ticket_settings import support_ticket_settings as STS
         Setting.objects.update_or_create(
             key=STS.key,
             defaults={'value': {'statuses': 'Submitted\nPending\nClosed'}},
@@ -279,7 +279,7 @@ class BulkUUIDGuardTests(TestCase):
 
     def test_status_form_ignores_invalid_uuid(self):
         """BulkTicketStatusForm with mixed ids: only real ticket updated, no exception."""
-        from support_ticket.forms.bulk import BulkTicketStatusForm
+        from ..forms.bulk import BulkTicketStatusForm
         form = BulkTicketStatusForm(
             ticket_ids=['not-a-uuid', 'BAD', str(self.ticket.id)],
             data={'status': 'Pending'},
@@ -292,7 +292,7 @@ class BulkUUIDGuardTests(TestCase):
 
     def test_assign_form_ignores_invalid_uuid(self):
         """BulkTicketAssignForm with mixed ids: only real ticket updated, no exception."""
-        from support_ticket.forms.bulk import BulkTicketAssignForm
+        from ..forms.bulk import BulkTicketAssignForm
         form = BulkTicketAssignForm(
             ticket_ids=['not-a-uuid', '12345', str(self.ticket.id)],
             data={'assigned_to': str(self.ce.pk)},

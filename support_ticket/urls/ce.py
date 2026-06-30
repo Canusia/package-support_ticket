@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.urls import path
 
 from cis.utils import user_has_cis_role
-from support_ticket.views import types, tickets
+from ..views import types, tickets
 
 app_name = 'support_ticket'
 urlpatterns = [

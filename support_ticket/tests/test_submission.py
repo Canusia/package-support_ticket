@@ -6,11 +6,11 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from cis.models.settings import Setting
-from support_ticket.forms.fields import MultipleFileField
-from support_ticket.forms.types import SupportTicketForm, SupportTicketAssignmentForm
-from support_ticket.models.ticket import Ticket, TicketNote, TicketType
-from support_ticket.services import create_ticket_with_files, add_note_with_files
-from support_ticket.settings.support_ticket_settings import support_ticket_settings as STS
+from ..forms.fields import MultipleFileField
+from ..forms.types import SupportTicketForm, SupportTicketAssignmentForm
+from ..models.ticket import Ticket, TicketNote, TicketType
+from ..services import create_ticket_with_files, add_note_with_files
+from ..settings.support_ticket_settings import support_ticket_settings as STS
 
 User = get_user_model()
 
@@ -223,7 +223,7 @@ class HSAdminCreateViewTests(TestCase):
 
 class NewSupportTicketFormChoicesTests(TestCase):
     def test_send_to_excludes_instructors(self):
-        from support_ticket.forms.types import NewSupportTicketForm
+        from ..forms.types import NewSupportTicketForm
         values = [c[0] for c in NewSupportTicketForm().fields['send_to'].choices]
         self.assertIn('Students', values)
         self.assertIn('High School Administrators', values)
@@ -231,14 +231,14 @@ class NewSupportTicketFormChoicesTests(TestCase):
 
     def test_school_admins_branch_removes_student_field(self):
         """Bug #5: send_to='High School Administrators' must remove 'student' and keep 'administrator'."""
-        from support_ticket.forms.types import NewSupportTicketForm
+        from ..forms.types import NewSupportTicketForm
         form = NewSupportTicketForm(initial={'send_to': 'High School Administrators'})
         self.assertIn('administrator', form.fields)
         self.assertNotIn('student', form.fields)
 
     def test_students_branch_removes_administrator_field(self):
         """Bug #5 (symmetric): send_to='Students' must remove 'administrator' and keep 'student'."""
-        from support_ticket.forms.types import NewSupportTicketForm
+        from ..forms.types import NewSupportTicketForm
         form = NewSupportTicketForm(initial={'send_to': 'Students'})
         self.assertIn('student', form.fields)
         self.assertNotIn('administrator', form.fields)

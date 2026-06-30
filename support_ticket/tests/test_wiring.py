@@ -8,7 +8,7 @@ class AppWiringTests(TestCase):
         self.assertEqual(apps.get_app_config('support_ticket').label, 'support_ticket')
 
     def test_models_importable(self):
-        from support_ticket.models.ticket import Ticket, TicketType, TicketNote  # noqa: F401
+        from ..models.ticket import Ticket, TicketType, TicketNote  # noqa: F401
 
     def test_url_namespaces_resolve(self):
         # one URL per portal namespace proves urls/*.py are wired

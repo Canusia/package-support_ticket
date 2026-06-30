@@ -9,7 +9,7 @@ from crispy_forms.layout import Submit
 
 from cis.models.settings import Setting
 from cis.validators import validate_html_short_code
-from support_ticket.constants import DEFAULT_STATUSES
+from ..constants import DEFAULT_STATUSES
 
 WHO_CHOICES = [
     ('student', 'Students'),

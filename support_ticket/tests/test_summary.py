@@ -4,7 +4,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
 
-from support_ticket.models.ticket import Ticket, TicketType
+from ..models.ticket import Ticket, TicketType
 
 User = get_user_model()
 

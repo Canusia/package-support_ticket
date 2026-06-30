@@ -38,7 +38,7 @@ ticket_actions = ActionRegistry(OrderedDict({
     btn_class='btn-warning',
 )
 def bulk_update_status(request):
-    from support_ticket.forms.bulk import BulkTicketStatusForm
+    from .forms.bulk import BulkTicketStatusForm
     ids = request.POST.getlist('ids[]')
     template = 'cis/students/bulk_action.html'
 
@@ -81,7 +81,7 @@ def bulk_update_status(request):
     btn_class='btn-info',
 )
 def bulk_update_assigned_to(request):
-    from support_ticket.forms.bulk import BulkTicketAssignForm
+    from .forms.bulk import BulkTicketAssignForm
     ids = request.POST.getlist('ids[]')
     template = 'cis/students/bulk_action.html'
 

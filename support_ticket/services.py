@@ -1,7 +1,7 @@
 from django.db import transaction
 
-from support_ticket.models.ticket import Ticket, TicketNote
-from support_ticket.models.attachment import TicketAttachment
+from .models.ticket import Ticket, TicketNote
+from .models.attachment import TicketAttachment
 
 
 @transaction.atomic

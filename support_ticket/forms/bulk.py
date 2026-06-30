@@ -15,7 +15,7 @@ from collections import OrderedDict
 from django import forms
 
 from cis.models.customuser import CustomUser
-from support_ticket.settings.support_ticket_settings import (
+from ..settings.support_ticket_settings import (
     support_ticket_settings as STS,
 )
 
@@ -46,7 +46,7 @@ class BulkTicketStatusForm(forms.Form):
         self.fields['status'].choices = [(s, s) for s in statuses]
 
     def save(self, request):
-        from support_ticket.models.ticket import Ticket
+        from ..models.ticket import Ticket
         count = Ticket.objects.filter(id__in=self._ticket_ids).update(
             status=self.cleaned_data['status']
         )
@@ -67,7 +67,7 @@ class BulkTicketAssignForm(forms.Form):
         self._ticket_ids = _valid_uuids(ticket_ids)
 
     def save(self, request):
-        from support_ticket.models.ticket import Ticket
+        from ..models.ticket import Ticket
         count = Ticket.objects.filter(id__in=self._ticket_ids).update(
             assigned_to=self.cleaned_data['assigned_to']
         )

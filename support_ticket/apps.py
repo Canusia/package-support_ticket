@@ -34,7 +34,7 @@ class SupportTicketConfig(AppConfig):
     def ready(self):
         # Signals live in support_ticket.signals (prod). Import unconditionally so
         # any error inside the module surfaces loudly rather than being swallowed.
-        import support_ticket.signals  # noqa: F401
+        from . import signals  # noqa: F401
 
 
 class DevSupportTicketConfig(SupportTicketConfig):
@@ -67,4 +67,4 @@ class DevSupportTicketConfig(SupportTicketConfig):
     def ready(self):
         # Dev mode: signals live in the in-tree inner package. Import unconditionally
         # so any error inside the module surfaces loudly rather than being swallowed.
-        import support_ticket.support_ticket.signals  # noqa: F401
+        from . import signals  # noqa: F401

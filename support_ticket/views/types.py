@@ -8,8 +8,8 @@ from django.http import JsonResponse
 
 from cis.utils import user_has_cis_role
 
-from support_ticket.models.ticket import TicketType
-from support_ticket.forms.types import TicketTypeForm
+from ..models.ticket import TicketType
+from ..forms.types import TicketTypeForm
 
 from cis.menu import cis_menu, draw_menu
 

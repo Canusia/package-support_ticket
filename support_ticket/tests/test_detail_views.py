@@ -20,8 +20,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from support_ticket.models.ticket import Ticket, TicketNote, TicketType
-from support_ticket.services import create_ticket_with_files
+from ..models.ticket import Ticket, TicketNote, TicketType
+from ..services import create_ticket_with_files
 
 User = get_user_model()
 

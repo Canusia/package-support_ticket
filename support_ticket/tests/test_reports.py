@@ -1,8 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from support_ticket.models.ticket import TicketType
-from support_ticket.reports.ticket_types_export import ticket_types_export
+from ..models.ticket import TicketType
+from ..reports.ticket_types_export import ticket_types_export
 
 User = get_user_model()
 

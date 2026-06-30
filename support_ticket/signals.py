@@ -5,9 +5,9 @@ from django.contrib.sites.models import Site
 
 from mailer import send_mail
 
-from support_ticket.models.ticket import Ticket, TicketNote
-from support_ticket.models.attachment import TicketAttachment
-from support_ticket.settings.support_ticket_settings import support_ticket_settings as STS
+from .models.ticket import Ticket, TicketNote
+from .models.attachment import TicketAttachment
+from .settings.support_ticket_settings import support_ticket_settings as STS
 
 
 def _site_url():

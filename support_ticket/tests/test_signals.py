@@ -5,8 +5,8 @@ from django.test import TestCase, override_settings
 from mailer.engine import send_all
 
 from cis.models.settings import Setting
-from support_ticket.models.ticket import Ticket, TicketType, TicketNote
-from support_ticket.settings.support_ticket_settings import support_ticket_settings as STS
+from ..models.ticket import Ticket, TicketType, TicketNote
+from ..settings.support_ticket_settings import support_ticket_settings as STS
 
 User = get_user_model()
 

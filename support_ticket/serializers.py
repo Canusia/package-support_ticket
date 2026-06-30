@@ -1,7 +1,7 @@
 from django.urls import NoReverseMatch, reverse
 from rest_framework import serializers
 
-from support_ticket.models.ticket import Ticket
+from .models.ticket import Ticket
 
 
 class TicketSerializer(serializers.ModelSerializer):

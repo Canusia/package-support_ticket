@@ -5,11 +5,11 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
-from support_ticket.constants import (
+from ..constants import (
     ROLE_TO_APPLIES_TO, APPLIES_TO_TO_ROLE, DEFAULT_STATUSES,
 )
-from support_ticket.models.ticket import Ticket, TicketNote, TicketType
-from support_ticket.models.attachment import TicketAttachment
+from ..models.ticket import Ticket, TicketNote, TicketType
+from ..models.attachment import TicketAttachment
 
 User = get_user_model()
 
@@ -80,12 +80,12 @@ class TicketAttachmentTests(TestCase):
 
 class MediaFieldRemovedTests(TestCase):
     def test_ticket_has_no_media_field(self):
-        from support_ticket.models.ticket import Ticket
+        from ..models.ticket import Ticket
         field_names = {f.name for f in Ticket._meta.get_fields()}
         self.assertNotIn('media', field_names)
 
     def test_note_has_no_media_field(self):
-        from support_ticket.models.ticket import TicketNote
+        from ..models.ticket import TicketNote
         field_names = {f.name for f in TicketNote._meta.get_fields()}
         self.assertNotIn('media', field_names)
 

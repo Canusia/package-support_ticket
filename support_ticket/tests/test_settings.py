@@ -4,7 +4,7 @@ from django.apps import apps as django_apps
 from django.test import TestCase
 from django.urls import NoReverseMatch, reverse
 from cis.models.settings import Setting
-from support_ticket.settings.support_ticket_settings import support_ticket_settings as STS
+from ..settings.support_ticket_settings import support_ticket_settings as STS
 
 _migration_0007 = import_module(
     'support_ticket.support_ticket.migrations.0007_migrate_legacy_settings_key'

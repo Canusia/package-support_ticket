@@ -1,6 +1,6 @@
 from rest_framework import routers
 
-from support_ticket.api import (
+from ..api import (
     CETicketViewSet, StudentTicketViewSet, InstructorTicketViewSet, HSAdminTicketViewSet,
     TicketSummaryViewSet,
 )

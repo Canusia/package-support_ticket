@@ -3,7 +3,7 @@
 """
 from django.urls import path
 
-from support_ticket.views.highschool_admins import (
+from ..views.highschool_admins import (
     tickets as requests, details, add_new
 )
 
