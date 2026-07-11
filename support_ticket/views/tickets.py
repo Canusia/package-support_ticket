@@ -119,7 +119,7 @@ def detail(request, record_id):
             'urls': {
                 'all_items': 'support_ticket:requests'
             },
-            'menu': draw_menu(cis_menu, 'support_reqs', 'requests'),
+            'menu': draw_menu(cis_menu, 'support_reqs', 'requests', 'ce'),
             'notes': notes,
             'record': record
         })
@@ -135,7 +135,7 @@ def index(request):
         'urls': {
             'details': 'support_ticket:request',
         },
-        'menu': draw_menu(cis_menu, 'support_reqs', 'requests'),
+        'menu': draw_menu(cis_menu, 'support_reqs', 'requests', 'ce'),
         'add_new_request_form': NewSupportTicketForm(initial={'send_to': 'Students'}),
         'can_start': True,
         'statuses': STS.get_statuses(),
@@ -154,7 +154,7 @@ def summary(request):
     return render(request, 'support_ticket/ticket/summary.html', {
         'page_title': 'Support Requests — Summary',
         'summary_url_base': '/api/v1/support-ticket-summary/',
-        'menu': draw_menu(cis_menu, 'support_reqs', 'summary'),
+        'menu': draw_menu(cis_menu, 'support_reqs', 'summary', 'ce'),
     })
 
 
