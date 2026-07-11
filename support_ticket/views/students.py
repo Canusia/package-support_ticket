@@ -23,7 +23,7 @@ def tickets(request):
             'add_new': 'student_support_ticket:add_new',
             'details': 'student_support_ticket:details',
         },
-        'menu': draw_menu(STUDENT_MENU, 'support', ''),
+        'menu': draw_menu(STUDENT_MENU, 'support', '', 'student'),
         'can_start': STS.can_start('student'),
     })
 
@@ -62,7 +62,7 @@ def add_new(request):
         'page_title': 'Submit New Support Request',
         'labels': {'all_items': 'All Requests'},
         'urls': {'all_items': 'student_support_ticket:requests'},
-        'menu': draw_menu(STUDENT_MENU, 'support', ''),
+        'menu': draw_menu(STUDENT_MENU, 'support', '', 'student'),
     })
 
 
@@ -72,7 +72,7 @@ def details(request, record_id):
     Show details for a ticket submitted by the current student (IDOR guard).
     """
     record = get_object_or_404(Ticket, pk=record_id, submitted_by=request.user)
-    menu = draw_menu(STUDENT_MENU, 'support', '')
+    menu = draw_menu(STUDENT_MENU, 'support', '', 'student')
 
     if request.method == 'POST':
         form = SupportTicketNoteForm(request.POST, request.FILES)

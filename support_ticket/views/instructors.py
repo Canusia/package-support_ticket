@@ -18,7 +18,7 @@ def tickets(request):
         'api_url': '/api/v1/support-ticket-instructor/?format=datatables',
         'urls': {'add_new': 'instructor_support_ticket:add_new',
                  'details': 'instructor_support_ticket:details'},
-        'menu': draw_menu(INSTRUCTOR_MENU, 'support', ''),
+        'menu': draw_menu(INSTRUCTOR_MENU, 'support', '', 'instructor'),
         'can_start': STS.can_start('instructor'),
     })
 
@@ -57,7 +57,7 @@ def add_new(request):
         'page_title': 'Submit New Support Request',
         'labels': {'all_items': 'All Requests'},
         'urls': {'all_items': 'instructor_support_ticket:requests'},
-        'menu': draw_menu(INSTRUCTOR_MENU, 'support', ''),
+        'menu': draw_menu(INSTRUCTOR_MENU, 'support', '', 'instructor'),
     })
 
 
@@ -67,7 +67,7 @@ def details(request, record_id):
     Show details for a ticket submitted by the current instructor (IDOR guard).
     """
     record = get_object_or_404(Ticket, pk=record_id, submitted_by=request.user)
-    menu = draw_menu(INSTRUCTOR_MENU, 'support', '')
+    menu = draw_menu(INSTRUCTOR_MENU, 'support', '', 'instructor')
 
     if request.method == 'POST':
         form = SupportTicketNoteForm(request.POST, request.FILES)

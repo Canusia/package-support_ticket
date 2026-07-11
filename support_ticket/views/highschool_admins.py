@@ -23,7 +23,7 @@ def tickets(request):
             'add_new': 'hs_admin_support_ticket:add_new',
             'details': 'hs_admin_support_ticket:details',
         },
-        'menu': draw_menu(HS_ADMIN_MENU, 'support', ''),
+        'menu': draw_menu(HS_ADMIN_MENU, 'support', '', 'highschool_admin'),
         'can_start': STS.can_start('highschool_admin'),
     })
 
@@ -62,7 +62,7 @@ def add_new(request):
         'page_title': 'Submit New Support Request',
         'labels': {'all_items': 'All Requests'},
         'urls': {'all_items': 'hs_admin_support_ticket:requests'},
-        'menu': draw_menu(HS_ADMIN_MENU, 'support', ''),
+        'menu': draw_menu(HS_ADMIN_MENU, 'support', '', 'highschool_admin'),
     })
 
 
@@ -72,7 +72,7 @@ def details(request, record_id):
     Show details for a ticket in the admin's high schools (IDOR guard via tickets_for_hsadmin).
     """
     record = get_object_or_404(tickets_for_hsadmin(request.user), pk=record_id)
-    menu = draw_menu(HS_ADMIN_MENU, 'support', '')
+    menu = draw_menu(HS_ADMIN_MENU, 'support', '', 'highschool_admin')
 
     if request.method == 'POST':
         form = SupportTicketNoteForm(request.POST, request.FILES)
