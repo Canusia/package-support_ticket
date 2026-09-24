@@ -68,7 +68,13 @@ class BulkTicketAssignForm(forms.Form):
 
     def save(self, request):
         from ..models.ticket import Ticket
-        count = Ticket.objects.filter(id__in=self._ticket_ids).update(
-            assigned_to=self.cleaned_data['assigned_to']
-        )
+        from ..signals import notify_assignee
+        assignee = self.cleaned_data['assigned_to']
+        tickets = Ticket.objects.filter(id__in=self._ticket_ids)
+        # .update() skips post_save, so email the tickets that really change hands here
+        newly_assigned = list(
+            tickets.exclude(assigned_to=assignee).select_related('ticket_type', 'submitted_by'))
+        count = tickets.update(assigned_to=assignee)
+        for ticket in newly_assigned:
+            notify_assignee(ticket, assignee)
         return count

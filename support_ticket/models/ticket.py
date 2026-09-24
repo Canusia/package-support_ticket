@@ -30,6 +30,9 @@ class TicketType(models.Model):
         blank=True, help_text='Comma-separated extra email addresses to notify on submission.')
     requires_attachment = models.BooleanField(
         default=False, help_text='Require at least one file when a ticket of this type is created.')
+    email_assignee = models.BooleanField(
+        default=False, verbose_name='Email assignee',
+        help_text='Email the assigned person whenever a ticket of this type is assigned to them.')
 
     class Meta:
         unique_together = ['name', 'applies_to']

@@ -18,7 +18,7 @@ class TicketTypesReportTests(TestCase):
         self.assertEqual(
             rows[0],
             ['Name', 'Applies To', 'Default Assignee', 'Notify Users',
-             'Notify Emails', 'Requires Attachment'])
+             'Notify Emails', 'Requires Attachment', 'Email Assignee'])
         body = rows[1]
         self.assertEqual(body[0], 'Tech')
         self.assertEqual(body[1], 'Students')

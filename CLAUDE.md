@@ -56,6 +56,9 @@ All models use UUID primary keys.
   - `notify_users` — M2M to `cis.CustomUser` (additional CE users to email on submission).
   - `notify_emails` — TextField of comma-separated extra addresses.
   - `requires_attachment` — BooleanField; enforced by `SupportTicketForm.clean()`.
+  - `email_assignee` — BooleanField (default off), a checkbox on the CE type form. When on, the
+    assignee is emailed (`assignment_email` template) each time a ticket of this type is assigned
+    to them.
   - `notify_recipient_emails()` — helper that merges `notify_users` emails + parsed
     `notify_emails`, de-duped, preserving order.
   - `unique_together` on `(name, applies_to)`.
@@ -95,6 +98,7 @@ flowchart TD
     B --> C{ticket_post_save: created=True}
     B2 --> C2{ticket_post_save: created=True}
     C -->|TicketType has default assignee| D[Ticket.assigned_to = type.assigned_to]
+    D -->|type.email_assignee| D2[email assignee via assignment_email template]
     C --> E[Email type's notify_recipient_emails list using submission_email template]
     E --> F[Ticket visible to CE staff]
     F --> G[Someone adds a TicketNote via add_note_with_files]
@@ -104,6 +108,7 @@ flowchart TD
     H -->|note by third party| K[email both parties]
     H -->|Internal note| L[email assigned_to only]
     F --> M[CE staff updates status / assignee]
+    M -->|assignee changed and type.email_assignee| M2[email new assignee via assignment_email template]
     M -->|status changed| N{ticket_pre_save captured old status}
     N --> O[email submitted_by via per-status template if notify=True]
     M --> P[status = Closed]
@@ -111,11 +116,17 @@ flowchart TD
 
 Signals live in `signals.py` (wired via `apps.ready()`):
 
-- **`ticket_pre_save`** (on `Ticket`) — captures `_old_status` before save; sets default status
-  from settings on brand-new tickets.
+- **`ticket_pre_save`** (on `Ticket`) — captures `_old_status` and `_old_assigned_to_id` before
+  save; sets default status from settings on brand-new tickets.
 - **`ticket_post_save`** (on `Ticket`) — on create: copies default assignee from type; emails the
-  type's notify list using `submission_email` template. On update: if status changed, emails
-  submitter using the per-status template (if `notify=True` for that status).
+  type's notify list using `submission_email` template; emails the assignee via
+  `notify_assignee()`. On update: if the assignee changed, emails the new assignee via
+  `notify_assignee()`; if status changed, emails submitter using the per-status template (if
+  `notify=True` for that status).
+- **`notify_assignee(ticket, assignee)`** — sends the `assignment_email` template to `assignee`,
+  only when `ticket.ticket_type.email_assignee` is on. `BulkTicketAssignForm.save()` reassigns
+  with `.update()` (no signals), so it calls this itself for each ticket that changes hands.
+  The CE on-behalf view also uses `.update()` to self-assign, so that assignment sends no email.
 - **`ticketnote_post_save`** (on `TicketNote`) — emails the other party when a note is posted.
   Internal notes only notify the assignee (not the submitter).
 - **`attachment_post_delete`** (on `TicketAttachment`) — deletes the S3 file on row removal.
@@ -145,6 +156,7 @@ Configurable fields:
 | `default_to` | Fallback recipients (comma-separated) when no assignee/notify list |
 | `statuses` | Newline-separated list; first entry is the default status for new tickets |
 | `submission_subject` / `submission_email` | Email sent to notify list on ticket creation |
+| `assignment_subject` / `assignment_email` | Email sent to the assignee on assignment (types with `email_assignee` on); falls back to `DEFAULT_ASSIGNMENT_SUBJECT` / `DEFAULT_ASSIGNMENT_EMAIL` when unset |
 | `note_subject` / `note_email` | Email sent when a note is added |
 | `status_<slug>_notify` / `_subject` / `_email` | Per-status template fields (dynamically generated from the `statuses` list) |
 
@@ -183,7 +195,7 @@ CE staff only. Template `support_ticket/ticket/summary.html` renders three Chart
 ## Reports
 
 `ticket_types_export` — CSV export of all `TicketType` rows with columns: Name, Applies To,
-Default Assignee, Notify Users, Notify Emails, Requires Attachment. Values are formula-safe via
+Default Assignee, Notify Users, Notify Emails, Requires Attachment, Email Assignee. Values are formula-safe via
 `_csv_safe`. Registered via `REPORTS` in `apps.py`; run from `/ce/reports/`.
 
 ## Key Files

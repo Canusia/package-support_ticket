@@ -11,6 +11,12 @@ from cis.models.settings import Setting
 from cis.validators import validate_html_short_code
 from ..constants import DEFAULT_STATUSES
 
+# Also the fallback for tenants whose saved settings predate the assignment email.
+DEFAULT_ASSIGNMENT_SUBJECT = 'A support request was assigned to you'
+DEFAULT_ASSIGNMENT_EMAIL = (
+    'Hi {{first_name}},\n\nA {{ticket_type}} request from {{submitter_name}} '
+    'was assigned to you:\n\n{{message}}\n\nLog in at {{site_url}}.')
+
 WHO_CHOICES = [
     ('student', 'Students'),
     ('instructor', 'Instructors'),
@@ -37,6 +43,14 @@ class SettingForm(forms.Form):
         widget=forms.Textarea, required=False, validators=[validate_html_short_code],
         help_text='Sent to the ticket type notify list on submission. '
                   'Shortcodes: {{first_name}}, {{ticket_type}}, {{message}}, {{site_url}}.')
+    assignment_subject = forms.CharField(
+        required=False,
+        help_text='Sent to the assignee when a ticket is assigned, for request types with '
+                  '"Email assignee" checked.')
+    assignment_email = forms.CharField(
+        widget=forms.Textarea, required=False, validators=[validate_html_short_code],
+        help_text='Shortcodes: {{first_name}} (assignee), {{submitter_name}}, {{ticket_type}}, '
+                  '{{message}}, {{site_url}}.')
     note_subject = forms.CharField(required=False)
     note_email = forms.CharField(
         widget=forms.Textarea, required=False, validators=[validate_html_short_code],
@@ -52,6 +66,8 @@ class SettingForm(forms.Form):
             'statuses': cd['statuses'],
             'submission_subject': cd['submission_subject'],
             'submission_email': cd['submission_email'],
+            'assignment_subject': cd['assignment_subject'],
+            'assignment_email': cd['assignment_email'],
             'note_subject': cd['note_subject'],
             'note_email': cd['note_email'],
         }
@@ -155,6 +171,8 @@ class support_ticket_settings(SettingForm):
             'statuses': '\n'.join(DEFAULT_STATUSES),
             'submission_subject': 'We received your support request',
             'submission_email': 'A new {{ticket_type}} request was submitted.\n\n{{message}}',
+            'assignment_subject': DEFAULT_ASSIGNMENT_SUBJECT,
+            'assignment_email': DEFAULT_ASSIGNMENT_EMAIL,
             'note_subject': 'Update added to your support request',
             'note_email': 'An update was posted:\n\n{{update}}\n\nLog in at {{site_url}}.',
         }
@@ -174,5 +192,6 @@ class support_ticket_settings(SettingForm):
             'first_name': request.user.first_name, 'status': 'Sample Status',
             'ticket_type': 'Sample Type', 'message': 'Sample message',
             'update': 'Sample update', 'site_url': 'https://example.com',
+            'submitter_name': 'Sample Submitter',
         })
         return render(request, 'cis/email.html', {'message': body.render(ctx)})

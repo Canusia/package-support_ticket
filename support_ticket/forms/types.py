@@ -21,7 +21,7 @@ from ..settings.support_ticket_settings import support_ticket_settings as STS
 class TicketTypeForm(forms.ModelForm):
     class Meta:
         model = TicketType
-        fields = ['name', 'applies_to', 'assigned_to']
+        fields = ['name', 'applies_to', 'assigned_to', 'email_assignee']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

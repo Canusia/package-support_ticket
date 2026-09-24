@@ -14,7 +14,7 @@ from myce_tenant_configs.services.bulk_enroller import _csv_safe
 from ..models.ticket import TicketType
 
 HEADER = ['Name', 'Applies To', 'Default Assignee', 'Notify Users',
-          'Notify Emails', 'Requires Attachment']
+          'Notify Emails', 'Requires Attachment', 'Email Assignee']
 
 
 class ticket_types_export(forms.Form):
@@ -42,6 +42,7 @@ class ticket_types_export(forms.Form):
                 _csv_safe(notify_users),
                 _csv_safe(tt.notify_emails or ''),
                 'Yes' if tt.requires_attachment else 'No',
+                'Yes' if tt.email_assignee else 'No',
             ])
         return rows
 
