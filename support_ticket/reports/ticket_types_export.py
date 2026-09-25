@@ -9,9 +9,9 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
 
 from cis.backends.storage_backend import PrivateMediaStorage
-from myce_tenant_configs.services.bulk_enroller import _csv_safe
 
 from ..models.ticket import TicketType
+from ..utils import _csv_safe
 
 HEADER = ['Name', 'Applies To', 'Default Assignee', 'Notify Users',
           'Notify Emails', 'Requires Attachment', 'Email Assignee']

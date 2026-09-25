@@ -212,6 +212,7 @@ Default Assignee, Notify Users, Notify Emails, Requires Attachment, Email Assign
 | `constants.py` | `ROLE_TO_APPLIES_TO`, `APPLIES_TO_TO_ROLE`, `DEFAULT_STATUSES` |
 | `settings/support_ticket_settings.py` | `support_ticket_settings` settings class + helper classmethods |
 | `reports/ticket_types_export.py` | `ticket_types_export` CSV report |
+| `utils.py` | `_csv_safe` (CSV formula-injection escape). Package-local on purpose: the package must not import tenant-only modules such as `myce_tenant_configs` |
 | `views/tickets.py` | CE: list / detail / delete / summary / on-behalf-of create |
 | `views/types.py` | CE: `TicketType` CRUD |
 | `views/students.py` | Student portal: list / create / detail+notes |
