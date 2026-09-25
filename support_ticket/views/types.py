@@ -1,9 +1,9 @@
-from django.db.models import Q, Count
+from django.db.models import Count
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.http import JsonResponse
 
 from cis.utils import user_has_cis_role
@@ -59,7 +59,8 @@ def detail(request, record_id):
                 messages.SUCCESS,
                 'Successfully updated record',
                 'list-group-item-success') 
-            return redirect('support_ticket:type', record_id=record_id)
+            # reopen the Details tab the form lives on
+            return redirect(reverse('support_ticket:type', args=[record_id]) + '#details')
     else:
         form = TicketTypeForm(instance=record)
 
@@ -78,6 +79,8 @@ def detail(request, record_id):
             'menu': draw_menu(cis_menu, 'support_reqs', 'types', 'ce'),
             'record': record,
             'table': ce_table_context('support_type_requests_table', ticket_type=record),
+            # a POST that reaches render() failed validation: show the form's tab
+            'active_tab': 'details' if request.method == 'POST' else 'requests',
         })
 
 @user_passes_test(user_has_cis_role, login_url='/')
@@ -144,57 +147,16 @@ def add_new(request):
 @user_passes_test(user_has_cis_role, login_url='/')
 def index(request):
     '''
-     search and index page for staff
+    Request types list for staff. Types are few, so the whole list is rendered
+    and searched/sorted client-side by DataTables.
     '''
-    menu = draw_menu(cis_menu, 'support_reqs', 'types', 'ce')
-
-    template = 'support_ticket/type/index.html'
-    query = request.GET.get('q', '')
-    page = request.GET.get('page', 1)
-    order_by = request.GET.get('order_by', 'name').lower()
-    order = request.GET.get('order', 'asc')
-
-    valid_order_by_fields = [
-        'name', 'assigned_to',
-        'applies_to'
-    ]
-    if order_by not in valid_order_by_fields:
-        order_by = 'name'
-
-    valid_order = [
-        'asc', 'desc'
-    ]
-    if order not in valid_order:
-        order = 'asc'
-
-    if not query:
-        record_list = TicketType.objects.all().order_by(
-            order_by if order == 'asc' else f"-{order_by}")
-    else:
-        record_list = TicketType.objects.filter(
-            Q(name__contains=query)).order_by(
-                order_by if order == 'asc' else f"-{order_by}")
-    
-    record_list = record_list.annotate(number_of_tickets=Count('ticket'))
-
-    paginator = Paginator(record_list, 30)
-    try:
-        records = paginator.page(page)
-    except PageNotAnInteger:
-        records = paginator.page(1)
-    except EmptyPage:
-        records = paginator.page(paginator.num_pages)
-
-    return render(
-        request,
-        template, {
-            'page_title': 'Request Types',
-            'urls': {
-                'add_new': 'support_ticket:add_new_type',
-                'details': 'support_ticket:type'
-            },
-            'menu': menu,
-            'records':records,
-            'q': query,
-            'order_by': order_by,
-            'order': order})
+    records = (TicketType.objects
+               .select_related('assigned_to')
+               .annotate(number_of_tickets=Count('ticket'))
+               .order_by('applies_to', 'name'))
+    return render(request, 'support_ticket/type/index.html', {
+        'page_title': 'Request Types',
+        'menu': draw_menu(cis_menu, 'support_reqs', 'types', 'ce'),
+        'records': records,
+        'applies_to_choices': TicketType.APPLIES_TO,
+    })

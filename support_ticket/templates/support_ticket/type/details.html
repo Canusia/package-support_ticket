@@ -1,103 +1,94 @@
 {% extends "cis/logged-base.html" %}
-{%block title %}{{ page_title }}{% endblock %}
+{% block title %}{{ page_title }}{% endblock %}
 
-{% load templatehelpers %}
 {% load crispy_forms_tags %}
 
 {% block body %}
-<script>
-    jQuery(function ($) {
-        /* $('.ui.search').search({
-            apiSettings: {
-                url: "{% url 'cis:district_ajax_search' %}?q={query}"
-            },
-            fields: {
-                results: 'items',
-                title: 'name',
-                url: 'html_url'
-            },
-            minCharacters: 3
-        }); */
-
-        $('.dataTable').DataTable();
-    });
-</script>
-<div class="">
-    <div class="row">
-        <div class="col-md-6 col-sm-12">
-            <h1 class="h3 mt-3 text-gray-800 mb-3">{{ record.name }}</h1>
-        </div>
-        <!-- <div class="col-md-6 col-sm-12">
-            <div class="justify-content-end">
-                <form class="form-inline p-2 justify-content-end">
-                    <div class="ui search category focus">
-                        <div class="ui left icon input">
-                            <input class="prompt" type="text" placeholder="Search by name" autocomplete="off">
-                        </div>
-                        <div class="results"></div>
-                    </div>
-                </form>
-            </div>
-        </div> -->
-    </div>
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="#">Home</a></li>
-            <li class="breadcrumb-item"><a href="{% url urls.all_items %}?{% query_transform %}">{{ labels.all_items }}</a>
-            </li>
-            <li class="breadcrumb-item active" aria-current="page">{{ record.name }}</li>
-        </ol>
-    </nav>
-</div>
 <main>
-    <div class="">
-        <div class="row">
-            <div class="col-md-4 col-sm-12 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Details</h5>
-                        <div class="card-text">
-                            {% if messages %}
-                            <ul class="messages list-group">
-                                {% for message in messages %}
-                                <li{% if message.tags %} class="list-group-item {{ message.tags }}" {% endif %}>
-                                    {{ message }}</li>
-                                    {% endfor %}
-                            </ul>
-                            {% endif %}
-                            <form action="" method="post">
-                                {% csrf_token %}
-                                {{ form | crispy }}
-                                <input type="submit" class="btn btn-primary btn-sm" value="Update">&nbsp;
-                                <input type="button" value="Delete" class="btn btn-danger btn-sm delete">
-                            </form>
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url urls.all_items %}">{{ labels.all_items }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ record.name }}</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-md-12 col-sm-12">
+            <h4 class="float-right">{{ record.name }} <small class="text-muted">({{ record.applies_to }})</small></h4>
+            <div class="clearfix"></div>
+            <div class="btn-group btn-group-sm float-right mb-3">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">Actions</button>
+                <div class="dropdown-menu dropdown-menu-right">
+                    <a class="dropdown-item" href="{% url 'support_ticket:add_new_type' %}"><i
+                            class="fas fa-plus text-dark"></i>&nbsp;Add New Type</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item delete-type" href="{% url 'support_ticket:delete_type' record.id %}"><i
+                            class="fas fa-trash text-danger"></i>&nbsp;Delete Type</a>
+                </div>
+            </div>
+            <div class="clearfix"></div>
+
+            {% include "cis/messages.html" with messages=messages %}
+
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link {% if active_tab == 'requests' %}active{% endif %}" data-toggle="tab" href="#requests">
+                        {{ record.name }} Requests
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_tab == 'details' %}active{% endif %}" data-toggle="tab" href="#details">
+                        Details
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane {% if active_tab == 'requests' %}active{% endif %}" id="requests">
+                    <div class="card border-top-0">
+                        <div class="card-body">
+                            {% include "support_ticket/ticket/_table.html" with table=table %}
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane {% if active_tab == 'details' %}active{% endif %}" id="details">
+                    <div class="card border-top-0">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-6 col-md-8 col-sm-12">
+                                    <form action="" method="post">
+                                        {% csrf_token %}
+                                        {{ form | crispy }}
+                                        <input type="submit" class="btn btn-primary btn-sm" value="Update">
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <div class="row">
-            <div class="col-12">
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ record.name }} Requests</h5>
-                        {% include "support_ticket/ticket/_table.html" with table=table %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <script>
-            jQuery(document).ready(function($) {
-                $("input.delete").on("click", function() {
-                    if(!confirm("Are you sure you want to permanently delete this record?"))
-                        return;
-                    window.location = "{% url 'support_ticket:delete_type' record.id%}";
-                });
-            });
-        </script>
     </div>
-
 </main>
+
+<script>
+jQuery(function ($) {
+    // open the tab named in the URL hash (e.g. #details after saving)
+    if (window.location.hash) {
+        $('.nav-tabs a[href="' + window.location.hash + '"]').tab('show');
+    }
+    // the requests table may first render in a hidden pane; fix its column widths when shown
+    $('a[data-toggle="tab"]').on('shown.bs.tab', function () {
+        $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
+    });
+    $('a.delete-type').on('click', function (e) {
+        if (!confirm('Are you sure you want to permanently delete this request type?')) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
 {% endblock %}

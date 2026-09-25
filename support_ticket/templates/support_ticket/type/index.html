@@ -1,81 +1,115 @@
 {% extends "cis/logged-base.html" %}
-{%block title %}{{ page_title }}{% endblock %}
-
-{% load templatehelpers %}
+{% block title %}{{ page_title }}{% endblock %}
 
 {% block body %}
 <main>
     <div class="">
         <div class="row">
             <div class="col-sm-6 col-xs-12">
-                <h1 class="h3 mb-4 text-gray-800">{{ page_title }}&nbsp; 
-                    <small><a href="{% url  urls.add_new %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i>&nbsp;Add New</a></small>
+                <h1 class="h3 mb-4 text-gray-800">{{ page_title }}&nbsp;
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                            Actions
+                        </button>
+                        <div class="dropdown-menu">
+                            <a href="{% url 'support_ticket:add_new_type' %}" class="dropdown-item"><i
+                                    class="fas fa-plus"></i>&nbsp;&nbsp;Add New Type</a>
+                            <a href="{% url 'support_ticket:requests' %}" class="dropdown-item"><i
+                                    class="fas fa-ticket-alt"></i>&nbsp;&nbsp;All Requests</a>
+                        </div>
+                    </div>
                 </h1>
             </div>
-            <div class="col-sm-6 col-xs-12 d-none d-md-block d-sm-block">
-                <div class="justify-content-end">
-                {% include 'snippets/search.html' with q=q search_help=search_help %}
+        </div>
+
+        {% include "cis/messages.html" with messages=messages %}
+
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <a class="nav-link active" href="{% url 'support_ticket:types' %}">All Types</a>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <div class="tab-pane active">
+                <div class="bg-white border border-top-0">
+                    <div class="col-12 pt-3 mb-3">
+                        <div class="card mb-3">
+                            <div class="card-body bg-gray-200">
+                                <form id="request_types_table_filter" class="form-inline filter" onsubmit="return false;">
+                                    <div class="form-row w-100">
+                                        <div class="col">
+                                            <div class="float-right">
+                                                <select class="form-control mt-2" name="applies_to">
+                                                    <option value="">By Applies To</option>
+                                                    {% for value, label in applies_to_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+                                                </select>
+                                                <div class="clearfix">&nbsp;</div>
+                                                <input type="button" value="Filter & Get Results" class="btn btn-primary btn_filter">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table id="request_types_table" class="table table-striped" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Applies To</th>
+                                        <th>Default Assignee</th>
+                                        <th>Email Assignee</th>
+                                        <th>Requires Attachment</th>
+                                        <th># Requests</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for r in records %}
+                                    <tr>
+                                        <td><a href="{% url 'support_ticket:type' r.id %}">{{ r.name }}</a></td>
+                                        <td>{{ r.applies_to }}</td>
+                                        <td>{% if r.assigned_to %}{{ r.assigned_to.last_name }}, {{ r.assigned_to.first_name }}{% endif %}</td>
+                                        <td>{{ r.email_assignee|yesno:"Yes,No" }}</td>
+                                        <td>{{ r.requires_attachment|yesno:"Yes,No" }}</td>
+                                        <td>{{ r.number_of_tickets }}</td>
+                                        <td class="text-right"><a class="btn btn-sm btn-primary"
+                                                href="{% url 'support_ticket:type' r.id %}">Open</a></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <div class="row table-responsive" style="min-height: 500px;">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-
-                        {% include 'snippets/th-order.html' with order_by=order_by order=order title='Type' ordering_by='name' %}
-                        {% include 'snippets/th-order.html' with order_by=order_by order=order title='Applies To' ordering_by='applies_to' %}
-                        {% include 'snippets/th-order.html' with order_by=order_by order=order title='Assigned To' ordering_by='assigned_to' %}
-                        <th># Tickets</th>
-                        <th class='text-right'><span class='sr-only'>Actions</span></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for r in records %}
-                    <tr>
-                        <td><a href="{% url urls.details r.id %}?{% query_transform %}">{{ r.name }}</a></td>
-                        <td>{{r.applies_to}}</td>
-                        <td>{{r.assigned_to}}</td>
-                        <td>{{r.number_of_tickets}}</td>
-                        <td class='text-right'><a class="btn btn-sm btn-default btn-outline-secondary"
-                                href="{% url urls.details r.id %}?{% query_transform %}">View Details</a></td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="2">Your search did not match any records</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% if records.has_other_pages %}
-        <ul class="pagination justify-content-end">
-            {% if records.has_previous %}
-            <li class="page-item"><a class="page-link"
-                    href="?{% query_transform page=records.previous_page_number %}">&laquo;</a></li>
-            {% else %}
-            <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
-            {% endif %}
-
-            {% for i in records.paginator.page_range %}
-            {% if records.number == i %}
-            <li class="page-item active"><span class="page-link">{{ i }} <span class="sr-only">(current)</span></span>
-            </li>
-            {% else %}
-            <li class="page-item"><a class="page-link" href="?{% query_transform page=i %}">{{ i }}</a></li>
-            {% endif %}
-            {% endfor %}
-
-            {% if records.has_next %}
-            <li class="page-item"><a class="page-link"
-                    href="?{% query_transform page=records.next_page_number %}">&raquo;</a></li>
-            {% else %}
-            <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
-            {% endif %}
-        </ul>
-        {% endif %}
     </div>
-
 </main>
+
+<script>
+jQuery(function ($) {
+    var $filter = $('#request_types_table_filter');
+    var table = $('#request_types_table').DataTable({
+        dom: 'lBfrtip',
+        pageLength: 50,
+        order: [[1, 'asc'], [0, 'asc']],
+        language: { emptyTable: 'No request types yet.' },
+        buttons: [
+            { extend: 'csv', className: 'btn btn-sm btn-primary text-white',
+              text: '<i class="fas fa-file-csv"></i>&nbsp;CSV',
+              exportOptions: { columns: ':not(:last-child)' } },
+        ],
+        columnDefs: [{ targets: -1, orderable: false, searchable: false }],
+    });
+    $filter.find('.btn_filter').on('click', function () {
+        var value = $filter.find('[name=applies_to]').val();
+        // exact match on the Applies To column; '' clears the filter
+        table.column(1).search(value ? '^' + $.fn.dataTable.util.escapeRegex(value) + '$' : '', true, false).draw();
+    });
+});
+</script>
 {% endblock %}
