@@ -63,7 +63,11 @@ All models use UUID primary keys.
     `notify_emails`, de-duped, preserving order.
   - `unique_together` on `(name, applies_to)`.
 
-- **`Ticket`** — `ticket_type`, `submitted_by`, optional `assigned_to`, `message`, `status`.
+- **`Ticket`** — `ticket_type`, `submitted_by`, optional `assigned_to`, `message`, `status`,
+  optional `term`.
+  - `term` — nullable FK to `cis.Term`. `ticket_pre_save` defaults it to `cis.utils.active_term()`
+    on create; a failed lookup leaves it `None` rather than blocking creation. CE edits it via
+    `SupportTicketAssignmentForm`.
   - `status` is a plain `CharField(max_length=40, default='Submitted')` with **no `choices`
     parameter** — valid values come from the settings-configured status list at runtime.
   - `submitted_on = DateTimeField(auto_now_add=True)` — immutable creation timestamp.
@@ -71,7 +75,9 @@ All models use UUID primary keys.
   - No `media` field (removed; replaced by `TicketAttachment`).
 
 - **`TicketNote`** — extends the abstract `cis.models.note.Note` (`note`, `createdby`,
-  `createdon`, `parent`). Adds `support_ticket` FK and `note_type` (`Public`/`Internal`). No
+  `createdon`, `parent`). Adds `support_ticket` FK, `note_type` (`Public`/`Internal`), and
+  `emailed_to` / `emailed_on` — who the note was actually emailed to (after Debug redirection)
+  and when, written by `ticketnote_post_save` via `.update()`; empty/`None` when not emailed. No
   `media` field (removed; replaced by `TicketAttachment`). All portals (incl. CE) create notes
   via `services.add_note_with_files(user, ticket, text, note_type, files)`, which sets
   `note_type` and persists any uploaded files as `TicketAttachment` rows. (The legacy
@@ -128,7 +134,10 @@ Signals live in `signals.py` (wired via `apps.ready()`):
   with `.update()` (no signals), so it calls this itself for each ticket that changes hands.
   The CE on-behalf view also uses `.update()` to self-assign, so that assignment sends no email.
 - **`ticketnote_post_save`** (on `TicketNote`) — emails the other party when a note is posted.
-  Internal notes only notify the assignee (not the submitter).
+  Internal notes only notify the assignee (not the submitter). `add_note_with_files(...,
+  email_submitter=False)` (the CE form's "Email this note to the submitter" checkbox, ticked by
+  default) drops the submitter from the recipients; the other party is still emailed. Records the
+  actual recipients on the note. `_send()` returns the addresses it queued (`[]` if none).
 - **`attachment_post_delete`** (on `TicketAttachment`) — deletes the S3 file on row removal.
 
 All outgoing mail goes through `mailer.send_mail` (async django-mailer queue). The `_send()`
@@ -213,7 +222,8 @@ Default Assignee, Notify Users, Notify Emails, Requires Attachment, Email Assign
 | `settings/support_ticket_settings.py` | `support_ticket_settings` settings class + helper classmethods |
 | `reports/ticket_types_export.py` | `ticket_types_export` CSV report |
 | `utils.py` | `_csv_safe` (CSV formula-injection escape). Package-local on purpose: the package must not import tenant-only modules such as `myce_tenant_configs` |
-| `views/tickets.py` | CE: list / detail / delete / summary / on-behalf-of create |
+| `views/tickets.py` | CE: list / detail / delete / summary / on-behalf-of create; `ce_table_context()` builds the shared CE requests table |
+| `templates/support_ticket/ticket/_table.html` | CE requests table + grey filter card (status, assignee, type, term, date range); used by the requests list and the type detail page (fixed to that type) |
 | `views/types.py` | CE: `TicketType` CRUD |
 | `views/students.py` | Student portal: list / create / detail+notes |
 | `views/highschool_admins.py` | HS admin portal: list / create / detail+notes |
