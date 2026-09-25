@@ -6,9 +6,10 @@ from django.urls import NoReverseMatch, reverse
 from cis.models.settings import Setting
 from ..settings.support_ticket_settings import support_ticket_settings as STS
 
-_migration_0007 = import_module(
-    'support_ticket.support_ticket.migrations.0007_migrate_legacy_settings_key'
-)
+# Built from this package's own path so it resolves both in-tree
+# (support_ticket.support_ticket) and pip-installed (support_ticket) (#3).
+_pkg = __package__.rsplit('.tests', 1)[0]
+_migration_0007 = import_module(f'{_pkg}.migrations.0007_migrate_legacy_settings_key')
 _forwards_0007 = _migration_0007.forwards
 OLD_KEY = _migration_0007.OLD_KEY
 NEW_KEY = _migration_0007.NEW_KEY

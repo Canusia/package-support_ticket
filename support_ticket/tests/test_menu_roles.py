@@ -11,6 +11,10 @@ from django.contrib.auth.models import Group
 from django.test import Client, TestCase
 from django.urls import reverse
 
+# Relative import, not a 'support_ticket.support_ticket.…' string: that path only
+# exists when the package is an in-tree submodule, not when pip-installed (#3).
+from ..views import highschool_admins, instructors, students
+
 User = get_user_model()
 
 
@@ -44,7 +48,7 @@ class SupportTicketMenuRoleTests(TestCase):
     def test_hsadmin_index_passes_highschool_admin_role(self):
         user = _roled_user('hsa_menu@example.com', 'highschool_admin')
         c = _login(user)
-        with patch('support_ticket.support_ticket.views.highschool_admins.draw_menu',
+        with patch.object(highschool_admins, 'draw_menu',
                    return_value='') as m:
             resp = c.get(reverse('hs_admin_support_ticket:requests'))
         self.assertEqual(resp.status_code, 200)
@@ -54,7 +58,7 @@ class SupportTicketMenuRoleTests(TestCase):
     def test_student_index_passes_student_role(self):
         user = _roled_user('stu_menu@example.com', 'student')
         c = _login(user)
-        with patch('support_ticket.support_ticket.views.students.draw_menu',
+        with patch.object(students, 'draw_menu',
                    return_value='') as m:
             resp = c.get(reverse('student_support_ticket:requests'))
         self.assertEqual(resp.status_code, 200)
@@ -64,7 +68,7 @@ class SupportTicketMenuRoleTests(TestCase):
     def test_instructor_index_passes_instructor_role(self):
         user = _roled_user('ins_menu@example.com', 'instructor')
         c = _login(user)
-        with patch('support_ticket.support_ticket.views.instructors.draw_menu',
+        with patch.object(instructors, 'draw_menu',
                    return_value='') as m:
             resp = c.get(reverse('instructor_support_ticket:requests'))
         self.assertEqual(resp.status_code, 200)
