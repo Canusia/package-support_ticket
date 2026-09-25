@@ -74,7 +74,7 @@ def detail(request, record_id):
                 'add_new': 'support_ticket:add_new_type',
                 'all_items': 'support_ticket:types'
             },
-            'menu': draw_menu(cis_menu, 'support_ticket', 'types', 'ce'),
+            'menu': draw_menu(cis_menu, 'support_reqs', 'types', 'ce'),
             'record': record
         })
 
@@ -144,7 +144,7 @@ def index(request):
     '''
      search and index page for staff
     '''
-    menu = draw_menu(cis_menu, 'support_reqs', 'manage_types', 'ce')
+    menu = draw_menu(cis_menu, 'support_reqs', 'types', 'ce')
 
     template = 'support_ticket/type/index.html'
     query = request.GET.get('q', '')

@@ -119,7 +119,7 @@ def detail(request, record_id):
             'urls': {
                 'all_items': 'support_ticket:requests'
             },
-            'menu': draw_menu(cis_menu, 'support_reqs', 'requests', 'ce'),
+            'menu': draw_menu(cis_menu, 'support_reqs', 'all_requests', 'ce'),
             'notes': notes,
             'record': record
         })
@@ -135,7 +135,7 @@ def index(request):
         'urls': {
             'details': 'support_ticket:request',
         },
-        'menu': draw_menu(cis_menu, 'support_reqs', 'requests', 'ce'),
+        'menu': draw_menu(cis_menu, 'support_reqs', 'all_requests', 'ce'),
         'add_new_request_form': NewSupportTicketForm(initial={'send_to': 'Students'}),
         'can_start': True,
         'statuses': STS.get_statuses(),
