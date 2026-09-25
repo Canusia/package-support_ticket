@@ -1,3 +1,6 @@
+import datetime
+import uuid
+
 from django.db.models import Count, F
 from rest_framework import mixins, viewsets
 
@@ -9,7 +12,7 @@ from .permissions import IsStudent, IsInstructor, IsHSAdmin
 
 def _base_qs():
     return Ticket.objects.select_related(
-        'ticket_type', 'submitted_by', 'assigned_to'
+        'ticket_type', 'submitted_by', 'assigned_to', 'term__academic_year'
     ).annotate(attachment_count=Count('attachments'))
 
 
@@ -41,6 +44,23 @@ class CETicketViewSet(_BaseTicketViewSet):
             except (ValueError, AttributeError, TypeError):
                 return qs.none()
             qs = qs.filter(assigned_to_id=assigned_to_id)
+
+        # UUID and date filters: a malformed value matches nothing rather than 500ing.
+        for param, lookup in (('ticket_type', 'ticket_type_id'), ('term_id', 'term_id')):
+            value = self.request.GET.get(param)
+            if value:
+                try:
+                    qs = qs.filter(**{lookup: uuid.UUID(value)})
+                except (ValueError, AttributeError, TypeError):
+                    return qs.none()
+        for param, lookup in (('submitted_from', 'submitted_on__date__gte'),
+                              ('submitted_until', 'submitted_on__date__lte')):
+            value = self.request.GET.get(param)
+            if value:
+                try:
+                    qs = qs.filter(**{lookup: datetime.date.fromisoformat(value)})
+                except ValueError:
+                    return qs.none()
         return qs.order_by('-submitted_on')
 
 

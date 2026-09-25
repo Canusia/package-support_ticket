@@ -273,8 +273,9 @@ class CETicketFilterTests(TestCase):
             user_logged_in.connect(post_login)
         resp = c.get(reverse('support_ticket:requests'))
         self.assertEqual(resp.status_code, 200)
-        self.assertIn('statuses', resp.context)
-        self.assertIn('ce_users', resp.context)
+        # filter options now live in the shared table context (ce_table_context)
+        self.assertIn('statuses', resp.context['table'])
+        self.assertIn('ce_users', resp.context['table'])
 
 
 class IndexViewShapeTests(TestCase):
@@ -298,7 +299,7 @@ class IndexViewShapeTests(TestCase):
         c = self._login(ce)
         resp = c.get(reverse('support_ticket:requests'))
         self.assertEqual(resp.status_code, 200)
-        self.assertIn('api_url', resp.context)
+        self.assertIn('api_url', resp.context['table'])
         self.assertNotIn('records', resp.context)
 
     def test_student_index_context_has_api_url_not_records(self):

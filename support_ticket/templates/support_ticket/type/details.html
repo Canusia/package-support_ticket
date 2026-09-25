@@ -75,8 +75,15 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-8 col-sm-12">
+        </div>
+
+        <div class="row">
+            <div class="col-12">
                 <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ record.name }} Requests</h5>
+                        {% include "support_ticket/ticket/_table.html" with table=table %}
+                    </div>
                 </div>
             </div>
         </div>

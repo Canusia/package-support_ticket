@@ -1,0 +1,125 @@
+{% comment %}
+CE support requests table + filter card. Shared by the requests index and the
+request type detail page (which passes a fixed ticket_type in api_url and sets
+show_type_filter=False). Context: table (dict from views.tickets.ce_table_context).
+{% endcomment %}
+<div class="card mb-3">
+    <div class="card-body bg-gray-200">
+        <form id="{{ table.id }}_filter" class="form-inline filter" onsubmit="return false;">
+            <div class="form-row w-100">
+                <div class="col">
+                    <div class="float-right">
+                        <select class="form-control mt-2" name="status">
+                            <option value="">By Status</option>
+                            {% for s in table.statuses %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+                        </select>&nbsp;
+                        <select class="form-control mt-2" name="assigned_to">
+                            <option value="">By Assignee</option>
+                            <option value="unassigned">Unassigned</option>
+                            {% for u in table.ce_users %}<option value="{{ u.id }}">{{ u.last_name }}, {{ u.first_name }}</option>{% endfor %}
+                        </select>&nbsp;
+                        {% if table.show_type_filter %}
+                        <select class="form-control mt-2" name="ticket_type">
+                            <option value="">By Type</option>
+                            {% for t in table.ticket_types %}<option value="{{ t.id }}">{{ t.name }} ({{ t.applies_to }})</option>{% endfor %}
+                        </select>&nbsp;
+                        {% endif %}
+                        <select class="form-control mt-2" name="term_id">
+                            <option value="">By Term</option>
+                            {% for t in table.terms %}<option value="{{ t.id }}">{{ t }}</option>{% endfor %}
+                        </select>&nbsp;
+                        <input type="date" name="submitted_from" class="form-control mt-2" title="Submitted from">&nbsp;
+                        <input type="date" name="submitted_until" class="form-control mt-2" title="Submitted until">
+                        <div class="clearfix">&nbsp;</div>
+                        <input type="button" value="Filter & Get Results" class="btn btn-primary btn_filter">
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="table-responsive" style="min-height: 400px;">
+    <table id="{{ table.id }}" class="table table-striped" style="width:100%">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Type</th>
+                <th>Term</th>
+                <th>Submitted By</th>
+                <th>Assigned To</th>
+                <th>Status</th>
+                <th>Submitted</th>
+                <th>Updated</th>
+                <th>Files</th>
+                <th></th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+<script>
+jQuery(function ($) {
+    var tableId = '{{ table.id|escapejs }}';
+    var $filter = $('#' + tableId + '_filter');
+    var bulkUrl = "{% url 'support_ticket:bulk_actions' %}";
+    var table = $('#' + tableId).DataTable({
+        serverSide: true,
+        processing: true,
+        stateSave: true,
+        dom: 'lBfrtip',
+        rowId: 'id',
+        select: { style: 'multi', selector: 'td:first-child' },
+        buttons: [
+            { extend: 'csv', className: 'btn btn-sm btn-primary text-white',
+              text: '<i class="fas fa-file-csv"></i>&nbsp;CSV',
+              titleAttr: 'Export current view to CSV',
+              exportOptions: { columns: ':not(:first-child):not(:last-child)' } },
+            { extend: 'pdfHtml5', className: 'btn btn-sm btn-primary text-white',
+              text: '<i class="fas fa-file-pdf"></i>&nbsp;PDF',
+              titleAttr: 'Export current view to PDF',
+              exportOptions: { columns: ':not(:first-child):not(:last-child)' } },
+            { text: '<i class="fas fa-exchange-alt"></i>&nbsp;Update Status',
+              className: 'btn btn-sm btn-warning text-white',
+              action: function (e, dt) {
+                window.ActionRegistry.doBulkAction(bulkUrl, 'bulk_update_status', dt);
+              } },
+            { text: '<i class="fas fa-user-edit"></i>&nbsp;Update Assigned To',
+              className: 'btn btn-sm btn-info text-white',
+              action: function (e, dt) {
+                window.ActionRegistry.doBulkAction(bulkUrl, 'bulk_update_assigned_to', dt);
+              } },
+        ],
+        ajax: {
+            url: '{{ table.api_url|escapejs }}',
+            data: function (d) {
+                $.each($filter.serializeArray(), function (_, field) { d[field.name] = field.value; });
+            },
+        },
+        order: [[6, 'desc']],
+        columns: [
+            // must send a real key: data:null stops rest_framework_datatables reading columns
+            { data: 'id', orderable: false, searchable: false, className: 'select-checkbox',
+              render: function () { return ''; } },
+            { data: 'ticket_type_name', name: 'ticket_type__name' },
+            { data: 'term_label',       name: 'term__label' },
+            { data: 'submitter_name',   name: 'submitted_by__last_name' },
+            { data: 'assignee_name',    name: 'assigned_to__last_name' },
+            { data: 'status',           name: 'status' },
+            { data: 'submitted_on',     name: 'submitted_on', searchable: false },
+            { data: 'last_updated_on',  name: 'last_updated_on', searchable: false },
+            { data: 'attachment_count', name: 'attachment_count', searchable: false, orderable: false },
+            { data: 'detail_url',       name: 'detail_url', searchable: false, orderable: false,
+              render: function (url) {
+                return "<a class='btn btn-sm btn-primary record-details' refresh-target='table' href='" + url + "'>Open</a>";
+              } },
+        ],
+    });
+    window.table = table;
+    window.refreshTable = function () {
+        table.rows().deselect();
+        table.ajax.reload(null, false);
+    };
+    $filter.find('.btn_filter').on('click', function () { table.ajax.reload(); });
+});
+</script>

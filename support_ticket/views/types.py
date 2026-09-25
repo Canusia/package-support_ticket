@@ -10,6 +10,7 @@ from cis.utils import user_has_cis_role
 
 from ..models.ticket import TicketType
 from ..forms.types import TicketTypeForm
+from .tickets import ce_table_context
 
 from cis.menu import cis_menu, draw_menu
 
@@ -75,7 +76,8 @@ def detail(request, record_id):
                 'all_items': 'support_ticket:types'
             },
             'menu': draw_menu(cis_menu, 'support_reqs', 'types', 'ce'),
-            'record': record
+            'record': record,
+            'table': ce_table_context('support_type_requests_table', ticket_type=record),
         })
 
 @user_passes_test(user_has_cis_role, login_url='/')

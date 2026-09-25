@@ -120,6 +120,7 @@
                                                 <th>Added On</th>
                                                 <th>Note</th>
                                                 <th>Added By</th>
+                                                <th>Emailed</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -133,6 +134,18 @@
                                                     {% endfor %}
                                                 </td>
                                                 <td>{{r.createdby.first_name}} {{r.createdby.last_name}}</td>
+                                                <td class="small">
+                                                    {% if r.emailed_on %}
+                                                        <i class="fas fa-envelope text-success"></i> Emailed to {{ r.emailed_to }}<br>
+                                                        <span class="text-muted">{{ r.emailed_on|date:'m/d/Y g:i a' }}</span>
+                                                    {% else %}
+                                                        <span class="text-muted">Not emailed</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted">No updates found.</td>
                                             </tr>
                                             {% endfor %}
                                         </tbody>

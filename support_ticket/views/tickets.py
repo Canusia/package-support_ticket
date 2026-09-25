@@ -15,7 +15,7 @@ from crispy_forms.utils import render_crispy_form
 from ..models.ticket import Ticket, TicketNote, TicketType
 from ..forms.types import (
     SupportTicketForm, SupportTicketAssignmentForm,
-    SupportTicketNoteForm, NewSupportTicketForm
+    SupportTicketNoteForm, CESupportTicketNoteForm, NewSupportTicketForm
 )
 from ..services import create_ticket_with_files, add_note_with_files
 
@@ -62,8 +62,9 @@ def detail(request, record_id):
     assignment_form = SupportTicketAssignmentForm(initial={
         'assigned_to': record.assigned_to,
         'status': record.status,
+        'term': record.term,
     })
-    noteform = SupportTicketNoteForm(initial={
+    noteform = CESupportTicketNoteForm(initial={
         'model': 'ticketnote',
         'ajax': 0,
         'add_to': record_id,
@@ -72,7 +73,7 @@ def detail(request, record_id):
 
     if request.method == 'POST':
         if request.POST.get('add_note') == 'Add Note':
-            noteform = SupportTicketNoteForm(request.POST, request.FILES)
+            noteform = CESupportTicketNoteForm(request.POST, request.FILES)
 
             if noteform.is_valid():
                 add_note_with_files(
@@ -81,6 +82,7 @@ def detail(request, record_id):
                     noteform.cleaned_data['note'],
                     'Public',
                     noteform.cleaned_data.get('files') or [],
+                    email_submitter=noteform.cleaned_data.get('email_submitter', False),
                 )
                 messages.add_message(
                     request,
@@ -94,6 +96,7 @@ def detail(request, record_id):
             if assignment_form.is_valid():
                 record.assigned_to = assignment_form.cleaned_data['assigned_to']
                 record.status = assignment_form.cleaned_data['status']
+                record.term = assignment_form.cleaned_data['term']
                 record.save()
 
                 messages.add_message(
@@ -124,6 +127,28 @@ def detail(request, record_id):
             'record': record
         })
 
+def ce_table_context(table_id, ticket_type=None):
+    """Context for support_ticket/ticket/_table.html (the CE requests table).
+
+    With ``ticket_type`` the table is fixed to that type (type detail page) and
+    the Type filter is hidden; otherwise every type is listed.
+    """
+    from cis.models.term import Term
+    api_url = '/api/v1/support-ticket-ce/?format=datatables'
+    if ticket_type is not None:
+        api_url += f'&ticket_type={ticket_type.id}'
+    return {
+        'id': table_id,
+        'api_url': api_url,
+        'show_type_filter': ticket_type is None,
+        'statuses': STS.get_statuses(),
+        'ce_users': CustomUser.objects.filter(
+            groups__name='ce', is_active=True).order_by('last_name', 'first_name'),
+        'ticket_types': TicketType.objects.order_by('applies_to', 'name'),
+        'terms': Term.objects.select_related('academic_year'),
+    }
+
+
 @user_passes_test(user_has_cis_role, login_url='/')
 def index(request):
     '''
@@ -131,15 +156,10 @@ def index(request):
     '''
     return render(request, 'support_ticket/ticket/index.html', {
         'page_title': 'Support Requests',
-        'api_url': '/api/v1/support-ticket-ce/?format=datatables',
-        'urls': {
-            'details': 'support_ticket:request',
-        },
         'menu': draw_menu(cis_menu, 'support_reqs', 'all_requests', 'ce'),
         'add_new_request_form': NewSupportTicketForm(initial={'send_to': 'Students'}),
         'can_start': True,
-        'statuses': STS.get_statuses(),
-        'ce_users': CustomUser.objects.filter(groups__name='ce', is_active=True).order_by('last_name', 'first_name'),
+        'table': ce_table_context('support_requests_table'),
     })
 
 

@@ -14,9 +14,13 @@ def create_ticket_with_files(user, ticket_type, message, files):
 
 
 @transaction.atomic
-def add_note_with_files(user, ticket, note_text, note_type, files):
-    note = TicketNote.objects.create(
+def add_note_with_files(user, ticket, note_text, note_type, files, email_submitter=True):
+    """Create a note (and its attachments). email_submitter=False keeps the
+    submitter off the notification; the other party is still emailed."""
+    note = TicketNote(
         support_ticket=ticket, createdby=user, note=note_text, note_type=note_type)
+    note._email_submitter = email_submitter  # read by signals.ticketnote_post_save
+    note.save()
     for f in files or []:
         TicketAttachment.objects.create(note=note, media=f, uploaded_by=user)
     return note

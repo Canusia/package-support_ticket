@@ -6,6 +6,7 @@ from .models.ticket import Ticket
 
 class TicketSerializer(serializers.ModelSerializer):
     ticket_type_name = serializers.CharField(source='ticket_type.name', read_only=True)
+    term_label = serializers.SerializerMethodField()
     submitter_name = serializers.SerializerMethodField()
     submitter_email = serializers.CharField(source='submitted_by.email', read_only=True)
     assignee_name = serializers.SerializerMethodField()
@@ -17,11 +18,14 @@ class TicketSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
         fields = [
-            'id', 'ticket_type_name', 'submitter_name', 'submitter_email',
+            'id', 'ticket_type_name', 'term_label', 'submitter_name', 'submitter_email',
             'assignee_name', 'status', 'submitted_on', 'last_updated_on',
             'attachment_count', 'detail_url',
         ]
         datatables_always_serialize = ['id', 'detail_url']
+
+    def get_term_label(self, obj):
+        return str(obj.term) if obj.term_id else ''
 
     def get_submitter_name(self, obj):
         u = obj.submitted_by

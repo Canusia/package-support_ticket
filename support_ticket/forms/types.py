@@ -41,8 +41,16 @@ class SupportTicketAssignmentForm(forms.Form):
         choices=[]
     )
 
+    term = forms.ModelChoiceField(
+        label='Term',
+        queryset=None,
+        required=False,
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        from cis.models.term import Term
+        self.fields['term'].queryset = Term.objects.select_related('academic_year')
 
         # get all CE users
         self.fields['assigned_to'].queryset = CustomUser.objects.filter(groups__name='ce')
@@ -79,6 +87,13 @@ class SupportTicketForm(forms.ModelForm):
 
 class SupportTicketNoteForm(NoteForm):
     files = MultipleFileField(required=False, label='Attachments')
+
+
+class CESupportTicketNoteForm(SupportTicketNoteForm):
+    """CE note form: the processor chooses whether the submitter is emailed."""
+    email_submitter = forms.BooleanField(
+        required=False, initial=True,
+        label='Email this note to the submitter')
 
 class NewSupportTicketForm(forms.Form):
     """

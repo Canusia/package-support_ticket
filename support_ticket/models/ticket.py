@@ -77,6 +77,11 @@ class Ticket(models.Model):
     message = models.TextField(blank=True)
 
     status = models.CharField(max_length=40, default='Submitted')
+    # Defaults to the active term when the ticket is created (signals.py); CE
+    # can change it on the detail page. Null for tickets that predate it.
+    term = models.ForeignKey(
+        'cis.Term', on_delete=models.SET_NULL, blank=True, null=True,
+        related_name='support_tickets')
     submitted_on = models.DateTimeField(auto_now_add=True)
     last_updated_on = models.DateTimeField(auto_now=True)
 
@@ -98,6 +103,11 @@ class TicketNote(Note, models.Model):
             ('Internal', 'Internal'),
         )
     )
+
+    # Who this note was actually emailed to (comma-separated, after Debug-mode
+    # redirection) and when it was queued; empty/None when it was not emailed.
+    emailed_to = models.TextField(blank=True, default='')
+    emailed_on = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         ordering = ['createdon']

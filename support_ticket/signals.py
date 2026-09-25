@@ -2,6 +2,7 @@ from django.db.models.signals import pre_save, post_save, post_delete
 from django.dispatch import receiver
 from django.template import Context, Template
 from django.contrib.sites.models import Site
+from django.utils import timezone
 
 from mailer import send_mail
 
@@ -28,14 +29,25 @@ def _resolve_recipients(intended):
 
 
 def _send(subject, body, recipients):
+    """Queue the email; return the addresses it actually went to ([] if none)."""
     cfg = STS.from_db()
     if cfg.get('is_active', 'Yes') == 'No':
-        return
+        return []
     recipients = _resolve_recipients(recipients)
     if not recipients:
-        return
+        return []
     from_email = cfg.get('from_email') or None  # None → Django DEFAULT_FROM_EMAIL
     send_mail(subject, body, from_email, recipients, fail_silently=True)
+    return recipients
+
+
+def _active_term():
+    """The active term, or None. Never lets a term lookup block ticket creation."""
+    try:
+        from cis.utils import active_term
+        return active_term()
+    except Exception:
+        return None
 
 
 def notify_assignee(ticket, assignee):
@@ -72,6 +84,8 @@ def ticket_pre_save(sender, instance, **kwargs):
         instance._old_assigned_to_id = None
         if not instance.status:
             instance.status = STS.get_default_status()
+        if instance.term_id is None:
+            instance.term = _active_term()
 
 
 @receiver(post_save, sender=Ticket)
@@ -122,7 +136,9 @@ def ticketnote_post_save(sender, instance, created, **kwargs):
     ticket = instance.support_ticket
     if ticket is None:
         return
-    # email the OTHER party
+    # email the OTHER party. The CE form can opt out of emailing the submitter
+    # (add_note_with_files(..., email_submitter=False)).
+    email_submitter = getattr(instance, '_email_submitter', True)
     to = []
     if instance.createdby_id == ticket.assigned_to_id:
         to = [ticket.submitted_by.email]
@@ -138,11 +154,17 @@ def ticketnote_post_save(sender, instance, created, **kwargs):
     # internal notes never notify the submitter
     if instance.note_type == 'Internal':
         to = [ticket.assigned_to.email] if ticket.assigned_to_id else []
+    if not email_submitter:
+        to = [addr for addr in to if addr != ticket.submitted_by.email]
     subject = cfg.get('note_subject', 'Update added to support request')
     body = Template(cfg.get('note_email', '{{update}}')).render(Context({
         'update': instance.note, 'site_url': _site_url(),
     }))
-    _send(subject, body, to)
+    sent_to = _send(subject, body, to)
+    if sent_to:
+        # .update() so recording the send doesn't re-fire this signal
+        TicketNote.objects.filter(pk=instance.pk).update(
+            emailed_to=', '.join(sent_to), emailed_on=timezone.now())
 
 
 @receiver(post_delete, sender=TicketAttachment)
