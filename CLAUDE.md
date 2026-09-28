@@ -62,6 +62,9 @@ All models use UUID primary keys.
   - `notify_recipient_emails()` — helper that merges `notify_users` emails + parsed
     `notify_emails`, de-duped, preserving order.
   - `unique_together` on `(name, applies_to)`.
+  - Every field above is on the CE add/edit form (`TicketTypeForm`). Those pages render
+    `form|crispy`, so a field missing from `Meta.fields` can only be set in Django admin —
+    `requires_attachment`, `notify_users` and `notify_emails` were missing until v1.0.1.
 
 - **`Ticket`** — `ticket_type`, `submitted_by`, optional `assigned_to`, `message`, `status`,
   optional `term`.

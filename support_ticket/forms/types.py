@@ -19,16 +19,31 @@ from ..models.ticket import TicketType, Ticket
 from ..settings.support_ticket_settings import support_ticket_settings as STS
 
 class TicketTypeForm(forms.ModelForm):
+    # Every TicketType setting belongs here: the add/edit pages render
+    # `form|crispy`, so a model field left out of `fields` cannot be set
+    # anywhere but Django admin.
     class Meta:
         model = TicketType
-        fields = ['name', 'applies_to', 'assigned_to', 'email_assignee']
+        fields = ['name', 'applies_to', 'requires_attachment',
+                  'assigned_to', 'email_assignee',
+                  'notify_users', 'notify_emails']
+        labels = {
+            'requires_attachment': _('Require a file upload'),
+            'notify_users': _('Notify these staff on submission'),
+            'notify_emails': _('Also notify these email addresses'),
+        }
+        widgets = {
+            'notify_emails': forms.TextInput(),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.fields['assigned_to'].queryset = CustomUser.objects.filter(
-            groups__name='ce'
-        )
+        ce_users = CustomUser.objects.filter(groups__name='ce').order_by(
+            'last_name', 'first_name')
+        self.fields['assigned_to'].queryset = ce_users
+        self.fields['notify_users'].queryset = ce_users
+        self.fields['notify_users'].widget.attrs['size'] = 8
         
 class SupportTicketAssignmentForm(forms.Form):
     assigned_to = forms.ModelChoiceField(
