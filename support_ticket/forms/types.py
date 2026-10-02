@@ -6,6 +6,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
 
 from cis.models.customuser import CustomUser
+from cis.highschool_scope import picker_queryset
 from cis.models.highschool import HighSchool
 from cis.models.highschool_administrator import (
     HSAdministrator, HSAdministratorPosition
@@ -162,7 +163,9 @@ class NewSupportTicketForm(forms.Form):
             )
             self.fields['ticket_type'].queryset = ticket_types
 
-            self.fields['highschool'].queryset = HighSchool.objects.all()
+            # Schools active on the current campus. `initial` is the raw POST
+            # in the view, so it is not used to keep a school in the list.
+            self.fields['highschool'].queryset = picker_queryset()
 
             if initial_args['send_to'] == TicketType.STUDENTS:
                 if initial_args.get('highschool', None):
