@@ -35,6 +35,7 @@ class SupportTicketConfig(AppConfig):
         # Signals live in support_ticket.signals (prod). Import unconditionally so
         # any error inside the module surfaces loudly rather than being swallowed.
         from . import signals  # noqa: F401
+        from . import menu  # noqa: F401  sidebar items (cis.menu_registry)
 
 
 class DevSupportTicketConfig(SupportTicketConfig):
@@ -68,3 +69,4 @@ class DevSupportTicketConfig(SupportTicketConfig):
         # Dev mode: signals live in the in-tree inner package. Import unconditionally
         # so any error inside the module surfaces loudly rather than being swallowed.
         from . import signals  # noqa: F401
+        from . import menu  # noqa: F401  sidebar items (cis.menu_registry)
