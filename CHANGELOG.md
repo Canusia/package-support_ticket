@@ -5,6 +5,10 @@ Releases are git-tag-driven: pin a tag in the host's `webapp/requirements.txt`
 (`git+https://github.com/Canusia/package-support_ticket.git@vX.Y.Z`). The
 declared version in `setup.cfg` and `pyproject.toml` always matches the tag.
 
+## v1.0.3 — 2026-11-02
+
+- Publishes the Support Requests sidebar items (CE, student, instructor, HS admin) to the cis menu registry (myce_cis v0.1.43a+). On older cis nothing changes.
+
 ## v1.0.0 — 2026-09-25
 
 The first stable release. It adds terms to requests, lets CE choose whether a
