@@ -5,6 +5,10 @@ Releases are git-tag-driven: pin a tag in the host's `webapp/requirements.txt`
 (`git+https://github.com/Canusia/package-support_ticket.git@vX.Y.Z`). The
 declared version in `setup.cfg` and `pyproject.toml` always matches the tag.
 
+## v1.1.0 — 2026-11-06
+
+- Request types have a **Description** (migration 0011), edited on the CE type form with the rich-text editor. Students, instructors and HS admins see the picked type's description under Request Type on the new-request page; links open in a new tab, so a docrepo file link (docrepo v0.0.5) can share a form to download. The description is rebuilt in the browser from a tag/link allowlist.
+
 ## v1.0.3 — 2026-11-02
 
 - Publishes the Support Requests sidebar items (CE, student, instructor, HS admin) to the cis menu registry (myce_cis v0.1.43a+). On older cis nothing changes.
