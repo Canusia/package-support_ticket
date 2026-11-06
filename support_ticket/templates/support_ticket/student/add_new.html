@@ -51,6 +51,7 @@
                         <form action="" id="form_support_request_add_new" method="post" enctype="multipart/form-data">
                             {% csrf_token %}
                             {{ form | crispy }}
+                            {% include "support_ticket/_type_description.html" %}
 
                             <input type="submit" class="btn btn-primary btn-sm" value="Submit Request">
                         </form>

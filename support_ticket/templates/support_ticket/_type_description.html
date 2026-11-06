@@ -1,0 +1,29 @@
+{% comment %}
+Shows the picked request type's description (TicketType.description, written
+by CE) under the Request Type select. Include after {{ form|crispy }} on a page
+whose form is a SupportTicketForm.
+{% endcomment %}
+{{ form.type_descriptions|json_script:"ticket_type_descriptions" }}
+<div id="ticket_type_description" class="alert bg-gray-100 mb-3" style="display:none"></div>
+<script>
+    (function () {
+        var descriptions = JSON.parse(document.getElementById('ticket_type_descriptions').textContent);
+        var select = document.getElementById('id_ticket_type');
+        var panel = document.getElementById('ticket_type_description');
+        if (!select || !panel) { return; }
+        var group = select.closest('.form-group') || select.parentNode;
+        group.parentNode.insertBefore(panel, group.nextSibling);
+
+        function show() {
+            var text = descriptions[select.value] || '';
+            panel.innerHTML = text;
+            panel.querySelectorAll('a[href]').forEach(function (a) {
+                a.setAttribute('target', '_blank');
+                a.setAttribute('rel', 'noopener');
+            });
+            panel.style.display = text ? '' : 'none';
+        }
+        select.addEventListener('change', show);
+        show();   // a re-rendered form keeps its pick
+    })();
+</script>

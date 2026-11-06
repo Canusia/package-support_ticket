@@ -30,6 +30,10 @@ class TicketType(models.Model):
         blank=True, help_text='Comma-separated extra email addresses to notify on submission.')
     requires_attachment = models.BooleanField(
         default=False, help_text='Require at least one file when a ticket of this type is created.')
+    description = models.TextField(
+        blank=True, default='',
+        help_text='Shown to the requester when they pick this type. Paste a document '
+                  'link (Documents > a document > Link to this file) to share a form.')
     email_assignee = models.BooleanField(
         default=False, verbose_name='Email assignee',
         help_text='Email the assigned person whenever a ticket of this type is assigned to them.')

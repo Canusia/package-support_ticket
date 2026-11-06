@@ -61,7 +61,8 @@
                                 <div class="col-lg-6 col-md-8 col-sm-12">
                                     <form action="" method="post">
                                         {% csrf_token %}
-                                        {{ form | crispy }}
+                                        {{ form.media }}
+{{ form | crispy }}
                                         <input type="submit" class="btn btn-primary btn-sm" value="Update">
                                     </form>
                                 </div>

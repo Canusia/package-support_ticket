@@ -50,7 +50,8 @@
                         </div>
                         <form action="" id="form_cohort_add_new" method="post">
                             {% csrf_token %}
-                            {{ form | crispy }}
+                            {{ form.media }}
+{{ form | crispy }}
 
                             {% if ajax == '1' %}
                                 <input type="hidden" name="ajax" value="1">

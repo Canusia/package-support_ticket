@@ -2,6 +2,11 @@ from django import forms
 from django.forms import ValidationError
 from django.utils.translation import gettext_lazy as _
 
+try:   # the editor cis uses; plain textarea where it is not installed
+    from django_ckeditor_5.widgets import CKEditor5Widget as _DescriptionWidget
+except ImportError:  # pragma: no cover
+    _DescriptionWidget = forms.Textarea
+
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
 
@@ -25,16 +30,18 @@ class TicketTypeForm(forms.ModelForm):
     # anywhere but Django admin.
     class Meta:
         model = TicketType
-        fields = ['name', 'applies_to', 'requires_attachment',
+        fields = ['name', 'applies_to', 'description', 'requires_attachment',
                   'assigned_to', 'email_assignee',
                   'notify_users', 'notify_emails']
         labels = {
             'requires_attachment': _('Require a file upload'),
             'notify_users': _('Notify these staff on submission'),
             'notify_emails': _('Also notify these email addresses'),
+            'description': _('Description shown to requesters'),
         }
         widgets = {
             'notify_emails': forms.TextInput(),
+            'description': _DescriptionWidget(),
         }
 
     def __init__(self, *args, **kwargs):
@@ -91,6 +98,15 @@ class SupportTicketForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         applies_to = ROLE_TO_APPLIES_TO.get(role, 'Students')
         self.fields['ticket_type'].queryset = TicketType.objects.filter(applies_to=applies_to)
+
+    def type_descriptions(self):
+        """{type id: description} for the types this form offers that have
+        one; the add-new page shows the picked type's text."""
+        return {
+            str(pk): text for pk, text in
+            self.fields['ticket_type'].queryset.exclude(description='')
+            .values_list('pk', 'description')
+        }
 
     def clean(self):
         cleaned = super().clean()
