@@ -30,8 +30,6 @@ class SettingForm(forms.Form):
     who_can_start = forms.MultipleChoiceField(
         choices=WHO_CHOICES, required=False,
         help_text='Roles allowed to open new tickets.')
-    from_email = forms.EmailField(
-        required=False, help_text='Sender address for ticket emails.')
     default_to = forms.CharField(
         widget=forms.Textarea, required=False,
         help_text='Fallback recipients (comma-separated) when no assignee/notify list.')
@@ -61,7 +59,6 @@ class SettingForm(forms.Form):
         return {
             'is_active': cd['is_active'],
             'who_can_start': cd['who_can_start'],
-            'from_email': cd['from_email'],
             'default_to': cd['default_to'],
             'statuses': cd['statuses'],
             'submission_subject': cd['submission_subject'],
@@ -174,7 +171,6 @@ class support_ticket_settings(SettingForm):
         defaults = {
             'is_active': 'Yes',
             'who_can_start': ['student', 'instructor', 'highschool_admin'],
-            'from_email': '',
             'default_to': '',
             'statuses': '\n'.join(DEFAULT_STATUSES),
             'submission_subject': 'We received your support request',

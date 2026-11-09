@@ -102,7 +102,9 @@ CE administrators configure Support Requests under **Settings → Misc. → Supp
 | **Submission email** | Subject + message sent to a type's notify list when a request is submitted |
 | **Note email** | Subject + message sent to the other party when a note is added |
 | **Default recipients** | Fallback addresses used when a request has no assignee |
-| **Sender address** | The "from" address on Support Request emails |
+
+Support Request emails are sent from the site's default sender address; there is no separate
+sender setting for this module.
 
 Email templates support shortcodes (e.g. `{{first_name}}`, `{{status}}`, `{{ticket_type}}`,
 `{{update}}`, `{{site_url}}`) that are filled in per request.

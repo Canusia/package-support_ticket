@@ -283,14 +283,14 @@ def _send(subject, body, recipients):
     recipients = _resolve_recipients(recipients) # Debug → redirect to default_to
     if not recipients:
         return
-    from_email = cfg.get('from_email') or None   # None → Django DEFAULT_FROM_EMAIL
-    send_mail(subject, body, from_email, recipients, fail_silently=True)
+    send_mail(subject, body, None, recipients, fail_silently=True)  # always DEFAULT_FROM_EMAIL
 ```
 
 - `is_active == 'No'` → no mail at all.
 - `is_active == 'Debug'` → `_resolve_recipients` redirects **all** mail to the
   `default_to` address list (safe for staging).
-- No hardcoded sender or debug recipient — both are settings-driven.
+- Mail always goes out from the site's `DEFAULT_FROM_EMAIL`; a `from_email` key left in an
+  older saved setting is ignored and dropped on the next save. The debug recipient is settings-driven.
 - Bodies are rendered with Django's template engine (`Template(...).render(Context(...))`)
   using shortcodes from the settings templates.
 
@@ -389,7 +389,6 @@ dev and prod (the outer shim re-exports the class). This is why the key uses the
 |-------|---------|
 | `is_active` | `Yes` / `No` / `Debug` — email delivery mode (see §3) |
 | `who_can_start` | multi-select of roles (`student`, `instructor`, `highschool_admin`) allowed to open tickets |
-| `from_email` | sender address; blank → `DEFAULT_FROM_EMAIL` |
 | `default_to` | fallback recipients (comma-separated) when no assignee / notify list |
 | `statuses` | newline-separated; **first line is the default status** for new tickets |
 | `submission_subject` / `submission_email` | sent to the type's notify list on creation. Shortcodes: `{{first_name}} {{ticket_type}} {{message}} {{site_url}}` |

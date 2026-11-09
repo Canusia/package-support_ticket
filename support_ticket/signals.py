@@ -36,8 +36,8 @@ def _send(subject, body, recipients):
     recipients = _resolve_recipients(recipients)
     if not recipients:
         return []
-    from_email = cfg.get('from_email') or None  # None → Django DEFAULT_FROM_EMAIL
-    send_mail(subject, body, from_email, recipients, fail_silently=True)
+    # Always the site's default sender; a stored per-module from_email is ignored (#5).
+    send_mail(subject, body, None, recipients, fail_silently=True)
     return recipients
 
 

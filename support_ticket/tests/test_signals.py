@@ -99,3 +99,25 @@ class SignalTests(TestCase):
         _flush()
         recipients = {addr for m in mail.outbox for addr in m.to}
         self.assertIn('ops@example.com', recipients)
+
+
+@override_settings(EMAIL_BACKEND=LOCMEM, MAILER_EMAIL_BACKEND=LOCMEM,
+                   DEFAULT_FROM_EMAIL='site@example.com')
+class DefaultSenderTests(TestCase):
+    """#5: support emails always come from DEFAULT_FROM_EMAIL."""
+
+    def test_stale_stored_from_email_is_ignored(self):
+        _configure(from_email='old-module-sender@example.com')
+        ce = User.objects.create(username='ce5', email='ce5@example.com')
+        tt = TicketType.objects.create(
+            name='Tech', applies_to='Students', assigned_to=ce,
+            notify_emails='watch@example.com')
+        submitter = User.objects.create(username='stu5', email='stu5@example.com')
+        mail.outbox = []
+        Ticket.objects.create(ticket_type=tt, submitted_by=submitter, message='hi', status='')
+        _flush()
+        self.assertTrue(mail.outbox)
+        self.assertEqual({m.from_email for m in mail.outbox}, {'site@example.com'})
+
+    def test_settings_form_has_no_sender_field(self):
+        self.assertNotIn('from_email', STS().fields)
