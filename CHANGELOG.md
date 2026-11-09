@@ -5,6 +5,18 @@ Releases are git-tag-driven: pin a tag in the host's `webapp/requirements.txt`
 (`git+https://github.com/Canusia/package-support_ticket.git@vX.Y.Z`). The
 declared version in `setup.cfg` and `pyproject.toml` always matches the tag.
 
+## v1.2.0 — 2026-11-09
+
+- **Sender address setting removed (#5).** Support Request emails always go from the site's `DEFAULT_FROM_EMAIL`. A `from_email` value stored on a tenant is ignored and dropped the next time the settings are saved. If a tenant's stored sender differs from `DEFAULT_FROM_EMAIL`, its support emails now come from a different address.
+- **New statuses keep their email templates on the first save (#4)** when the settings are saved through the settings API (for example a client_management workbook push). On the settings page, save once to add or rename statuses, then fill in their emails; a renamed status's old templates are not carried over.
+- **Filters on Request Types and the CE requests table** sit at the left instead of floating right.
+
+### Upgrading
+
+- No migrations and no `register_settings` changes.
+- Release client_management's support requests workbook fix (e68164d8) with this: without it, a workbook push to an upgraded tenant is rejected because it still sends `from_email`.
+- `docs/support-requests.pdf` still shows the Sender address field; `docs/support-requests.md` is current.
+
 ## v1.1.0 — 2026-11-06
 
 - Request types have a **Description** (migration 0011), edited on the CE type form with the rich-text editor. Students, instructors and HS admins see the picked type's description under Request Type on the new-request page; links open in a new tab, so a docrepo file link (docrepo v0.0.5) can share a form to download. The description is rebuilt in the browser from a tag/link allowlist.

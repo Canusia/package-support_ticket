@@ -145,8 +145,8 @@ Signals live in `signals.py` (wired via `apps.ready()`):
 
 All outgoing mail goes through `mailer.send_mail` (async django-mailer queue). The `_send()`
 helper reads `is_active` from settings: `No` → skip all mail; `Debug` → redirect all recipients
-to the `default_to` address list. `from_email` is settings-driven (falls back to Django's
-`DEFAULT_FROM_EMAIL`). No hardcoded sender address; no hardcoded debug recipient.
+to the `default_to` address list. Mail always goes from Django's `DEFAULT_FROM_EMAIL`
+(`from_email=None`); there is no sender setting (#5). No hardcoded debug recipient.
 
 ## Settings
 
@@ -164,7 +164,6 @@ Configurable fields:
 |-------|---------|
 | `is_active` | `Yes` / `No` / `Debug` — controls email delivery |
 | `who_can_start` | Multi-select of roles (`student`, `instructor`, `highschool_admin`) allowed to open new tickets |
-| `from_email` | Sender address (falls back to `DEFAULT_FROM_EMAIL`) |
 | `default_to` | Fallback recipients (comma-separated) when no assignee/notify list |
 | `statuses` | Newline-separated list; first entry is the default status for new tickets |
 | `submission_subject` / `submission_email` | Email sent to notify list on ticket creation |

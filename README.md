@@ -227,7 +227,6 @@ as a single `cis.models.settings.Setting` row keyed
 |-------|---------|
 | `is_active` | `Yes` / `No` / `Debug`. `No` skips all mail; `Debug` redirects all recipients to `default_to` |
 | `who_can_start` | Multi-select of roles (`student`, `instructor`, `highschool_admin`) allowed to open tickets |
-| `from_email` | Sender address; falls back to Django's `DEFAULT_FROM_EMAIL` |
 | `default_to` | Comma-separated fallback recipients when there's no assignee/notify list |
 | `statuses` | Newline-separated status list; the **first** entry is the default for new tickets |
 | `submission_subject` / `submission_email` | Template sent to the type's notify list on ticket creation |
