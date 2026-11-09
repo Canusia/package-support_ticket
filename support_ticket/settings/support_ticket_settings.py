@@ -128,8 +128,9 @@ class support_ticket_settings(SettingForm):
         super().__init__(*args, **kwargs)
         self.request = request
 
-        # dynamically add per-status template fields from the saved status list
-        for status in self.get_statuses():
+        # per-status template fields: from the submitted status list when bound,
+        # so a save that adds or renames a status keeps its templates (#4)
+        for status in self._status_list():
             slug = slugify(status)
             self.fields[f'status_{slug}_notify'] = forms.BooleanField(
                 required=False, label=f"'{status}' — email submitter on entering this status")
@@ -152,9 +153,16 @@ class support_ticket_settings(SettingForm):
             if name in self.fields:
                 self.fields[name].initial = value
 
+    def _status_list(self):
+        """Statuses to build per-status fields for: the submitted list when the
+        form is bound and it isn't blank, else the saved list."""
+        raw = (self.data.get('statuses') if self.is_bound else None) or ''
+        lines = [line.strip() for line in raw.splitlines() if line.strip()]
+        return lines or self.get_statuses()
+
     def _to_python(self):
         data = self._static_to_python()
-        for status in self.get_statuses():
+        for status in self._status_list():
             slug = slugify(status)
             for suffix in ('notify', 'subject', 'email'):
                 fname = f'status_{slug}_{suffix}'

@@ -99,3 +99,59 @@ class Migration0007SubjectRemapTests(TestCase):
         Setting.objects.filter(key=NEW_KEY).delete()
         _forwards_0007(django_apps, None)
         self.assertFalse(Setting.objects.filter(key=NEW_KEY).exists())
+
+
+def _post_data(**overrides):
+    """A valid settings POST (static fields only); overrides add per-status keys."""
+    data = {
+        'is_active': 'Yes', 'who_can_start': ['student'], 'default_to': '',
+        'statuses': 'Submitted\nPending\nClosed',
+        'submission_subject': '', 'submission_email': '',
+        'assignment_subject': '', 'assignment_email': '',
+        'note_subject': '', 'note_email': '',
+    }
+    data.update(overrides)
+    return data
+
+
+class PerStatusFieldsFollowSubmittedStatusesTests(TestCase):
+    """#4: per-status fields come from the submitted status list when the form is bound."""
+
+    def setUp(self):
+        Setting.objects.update_or_create(key=STS.key, defaults={'value': {
+            'statuses': 'Submitted\nPending\nClosed',
+            'status_closed_subject': 'Closed subject',
+        }})
+
+    def _save(self, data):
+        form = STS(data=data)
+        self.assertTrue(form.is_valid(), form.errors)
+        form.run_record()
+        return Setting.objects.get(key=STS.key).value
+
+    def test_new_status_templates_saved_in_one_save(self):
+        value = self._save(_post_data(
+            statuses='New\nWorking\nDone',
+            status_working_notify='on',
+            status_working_subject='Now working',
+            status_working_email='We are on it, {{first_name}}',
+        ))
+        self.assertEqual(value['statuses'], 'New\nWorking\nDone')
+        self.assertEqual(value['status_working_subject'], 'Now working')
+        self.assertTrue(value['status_working_notify'])
+        self.assertEqual(STS.status_template('Working')['subject'], 'Now working')
+
+    def test_removed_status_drops_its_keys(self):
+        value = self._save(_post_data(statuses='Submitted\nPending'))
+        self.assertNotIn('status_closed_subject', value)
+        self.assertNotIn('status_closed_email', value)
+
+    def test_blank_submitted_statuses_falls_back_to_saved_list(self):
+        form = STS(data=_post_data(statuses=''))
+        self.assertIn('status_closed_subject', form.fields)
+
+    def test_unbound_form_uses_saved_statuses(self):
+        form = STS()
+        self.assertIn('status_closed_subject', form.fields)
+        self.assertEqual(form.fields['status_closed_subject'].initial, 'Closed subject')
+        self.assertNotIn('status_working_subject', form.fields)
