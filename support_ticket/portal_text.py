@@ -28,7 +28,8 @@ def renamed_label(role):
     """
     try:
         from cis.menu import get_role_menu
-        items = get_role_menu(role)
+        # A renamed item staff hid is still reachable by URL; keep its label.
+        items = get_role_menu(role, visible_only=False)
     except Exception:
         log.exception('support_ticket: could not read the %s menu', role)
         return None
@@ -59,12 +60,19 @@ def page_blurb(role):
         return ''
     module_path, cls_name = path.rsplit('.', 1)
     try:
-        stored = getattr(importlib.import_module(module_path), cls_name).from_db() or {}
+        stored = getattr(importlib.import_module(module_path), cls_name).from_db()
     except Exception:
         log.exception('support_ticket: could not read %s', path)
         return ''
+    if not isinstance(stored, dict):
+        return ''
     value = stored.get(f'{MENU_ITEM}_blurb')
-    return value if isinstance(value, str) and value.strip() else ''
+    if not isinstance(value, str) or not value.strip():
+        return ''
+    # The settings forms require every blurb, so untouched ones hold placeholders.
+    if value.strip() == 'Change me' or value.strip().startswith('Change this in Settings'):
+        return ''
+    return value
 
 
 def page_titles(role):

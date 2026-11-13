@@ -14,6 +14,7 @@ from django.urls import reverse
 from .. import portal_text
 from ..models.ticket import TicketType
 from ..services import create_ticket_with_files
+from ..settings.support_ticket_settings import support_ticket_settings as STS
 
 User = get_user_model()
 
@@ -63,6 +64,11 @@ class PageHeadingTests(TestCase):
                 'Support Requests')
             self.assertIsNone(portal_text.renamed_label('student'))
 
+    def test_reads_hidden_items_too(self):
+        with patch('cis.menu.get_role_menu', return_value=_menu('X')) as m:
+            portal_text.renamed_label('student')
+        self.assertEqual(m.call_args.kwargs.get('visible_only'), False)
+
     def test_item_moved_into_a_group_is_found(self):
         menu = [{'name': 'tools', 'label': 'Tools',
                  'sub_menu': [{'name': 'support', 'label': 'Help Desk'}]}]
@@ -87,7 +93,9 @@ class PageBlurbTests(TestCase):
 
     def test_blank_missing_or_unreadable_gives_empty(self):
         setting = PORTALS[0][4]
-        for stored in ({}, {'support_blurb': '   '}, None):
+        for stored in ({}, {'support_blurb': '   '}, None, ['x'], 'x',
+                       {'support_blurb': 'Change me'},
+                       {'support_blurb': 'Change this in Settings -> Student -> Portal Language'}):
             with patch(f'{setting}.from_db', return_value=stored):
                 self.assertEqual(portal_text.page_blurb('highschool_admin'), '')
         with patch(f'{setting}.from_db', side_effect=RuntimeError('boom')):
@@ -119,7 +127,8 @@ class PortalPagesTests(TestCase):
                 with patch('cis.menu.get_role_menu',
                            return_value=_menu('Bulk Form Upload')), \
                         patch(f'{setting}.from_db',
-                              return_value={'support_blurb': BLURB}):
+                              return_value={'support_blurb': BLURB}), \
+                        patch.object(STS, 'can_start', return_value=True):
                     index = self._get(c, ns, 'requests')
                     add = self._get(c, ns, 'add_new')
                     detail = self._get(c, ns, 'details', ticket.id)
@@ -127,11 +136,10 @@ class PortalPagesTests(TestCase):
                 self.assertContains(index, 'Bulk Form Upload&nbsp;')
                 self.assertNotContains(index, 'Support Requests&nbsp;')
                 self.assertContains(index, BLURB)
-                if add.status_code == 200:   # can_start may be off
-                    self.assertContains(add, 'Bulk Form Upload — New')
+                self.assertContains(add, 'Bulk Form Upload — New')
                 # HS admin detail is scoped to the admin's schools; this user has none.
                 if role != 'highschool_admin':
-                    self.assertContains(detail, 'Bulk Form Upload')
+                    self.assertContains(detail, '<title>Bulk Form Upload')
 
     def test_stock_menu_no_blurb_keeps_todays_pages(self):
         for role, group, ns, applies_to, setting in PORTALS:

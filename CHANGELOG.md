@@ -5,6 +5,16 @@ Releases are git-tag-driven: pin a tag in the host's `webapp/requirements.txt`
 (`git+https://github.com/Canusia/package-support_ticket.git@vX.Y.Z`). The
 declared version in `setup.cfg` and `pyproject.toml` always matches the tag.
 
+## v1.2.1 — 2026-11-13
+
+- **Support pages follow the renamed menu item (#8).** A renamed Support Requests menu item (Settings → Menu Layout) now renames the student, instructor and HS admin support pages (list "<label>", add "<label> — New", detail "<label>"). Unrenamed tenants keep "Support Requests".
+- **Saved page text shows (#8).** Each portal's Portal Language `support_blurb` renders above the requests table; blank text and the untouched placeholders show nothing.
+
+### Upgrading
+
+- No migrations or settings changes.
+- Before upgrading, check each portal's Support Requests text in Portal Language: the form requires it, so filler such as "." may have been saved, and it now shows.
+
 ## v1.2.0 — 2026-11-09
 
 - **Sender address setting removed (#5).** Support Request emails always go from the site's `DEFAULT_FROM_EMAIL`. A `from_email` value stored on a tenant is ignored and dropped the next time the settings are saved. If a tenant's stored sender differs from `DEFAULT_FROM_EMAIL`, its support emails now come from a different address.
