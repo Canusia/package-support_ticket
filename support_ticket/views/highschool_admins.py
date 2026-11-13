@@ -8,6 +8,7 @@ from cis.menu import draw_menu, HS_ADMIN_MENU
 from ..forms.types import SupportTicketForm, SupportTicketNoteForm
 from ..models.ticket import Ticket, TicketNote
 from ..services import create_ticket_with_files, add_note_with_files, tickets_for_hsadmin
+from ..portal_text import page_blurb, page_titles
 from ..settings.support_ticket_settings import support_ticket_settings as STS
 
 
@@ -17,7 +18,8 @@ def tickets(request):
     Return tickets for HS admin's highschools — table data served via scoped DRF endpoint.
     """
     return render(request, 'support_ticket/highschool_admin/index.html', {
-        'page_title': 'Support Requests',
+        'page_title': page_titles('highschool_admin')[0],
+        'intro': page_blurb('highschool_admin'),
         'api_url': '/api/v1/support-ticket-hsadmin/?format=datatables',
         'urls': {
             'add_new': 'hs_admin_support_ticket:add_new',
@@ -59,7 +61,7 @@ def add_new(request):
     return render(request, 'support_ticket/highschool_admin/add_new.html', {
         'base_template': 'cis/logged-base.html',
         'form': form,
-        'page_title': 'Submit New Support Request',
+        'page_title': page_titles('highschool_admin')[1],
         'labels': {'all_items': 'All Requests'},
         'urls': {'all_items': 'hs_admin_support_ticket:requests'},
         'menu': draw_menu(HS_ADMIN_MENU, 'support', '', 'highschool_admin'),
@@ -101,7 +103,7 @@ def details(request, record_id):
 
     return render(request, 'support_ticket/highschool_admin/details.html', {
         'form': form,
-        'page_title': 'Support Request',
+        'page_title': page_titles('highschool_admin')[2],
         'labels': {'all_items': 'All Requests'},
         'urls': {'all_items': 'hs_admin_support_ticket:requests'},
         'menu': menu,

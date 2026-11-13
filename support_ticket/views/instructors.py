@@ -8,13 +8,15 @@ from cis.menu import draw_menu, INSTRUCTOR_MENU
 from ..models.ticket import Ticket, TicketNote
 from ..forms.types import SupportTicketForm, SupportTicketNoteForm
 from ..services import create_ticket_with_files, add_note_with_files
+from ..portal_text import page_blurb, page_titles
 from ..settings.support_ticket_settings import support_ticket_settings as STS
 
 
 @user_passes_test(user_has_instructor_role, login_url='/')
 def tickets(request):
     return render(request, 'support_ticket/instructor/index.html', {
-        'page_title': 'Support Requests',
+        'page_title': page_titles('instructor')[0],
+        'intro': page_blurb('instructor'),
         'api_url': '/api/v1/support-ticket-instructor/?format=datatables',
         'urls': {'add_new': 'instructor_support_ticket:add_new',
                  'details': 'instructor_support_ticket:details'},
@@ -54,7 +56,7 @@ def add_new(request):
     return render(request, 'support_ticket/instructor/add_new.html', {
         'base_template': 'cis/logged-base.html',
         'form': form,
-        'page_title': 'Submit New Support Request',
+        'page_title': page_titles('instructor')[1],
         'labels': {'all_items': 'All Requests'},
         'urls': {'all_items': 'instructor_support_ticket:requests'},
         'menu': draw_menu(INSTRUCTOR_MENU, 'support', '', 'instructor'),
@@ -96,7 +98,7 @@ def details(request, record_id):
 
     return render(request, 'support_ticket/instructor/details.html', {
         'form': form,
-        'page_title': 'Support Request',
+        'page_title': page_titles('instructor')[2],
         'record': record,
         'notes': notes,
         'labels': {'all_items': 'All Requests'},

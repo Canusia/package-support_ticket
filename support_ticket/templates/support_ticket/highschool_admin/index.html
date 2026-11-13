@@ -12,6 +12,8 @@
             </div>
         </div>
 
+        {% if intro %}<div class="support-page-text mb-3">{{ intro|safe }}</div>{% endif %}
+
         <div class="row table-responsive" style="min-height: 500px;">
             <table id="support-ticket-table" class="table table-striped" style="width:100%">
                 <thead>
