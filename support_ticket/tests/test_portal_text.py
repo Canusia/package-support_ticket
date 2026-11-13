@@ -83,26 +83,69 @@ class PageHeadingTests(TestCase):
             self.assertIsNone(portal_text.renamed_label('instructor'))
 
 
+def _text(role, stored=None, **kw):
+    """Patch where this cis reads ``role``'s portal text."""
+    try:
+        from cis import portal_text as cis_pt
+    except ImportError:
+        cis_pt = None
+    if cis_pt is not None and hasattr(cis_pt, 'role_portal_text'):
+        return patch.object(cis_pt, 'role_portal_text', return_value=stored, **kw)
+    return patch.object(portal_text, '_stored_text', return_value=stored, **kw)
+
+
 class PageBlurbTests(TestCase):
 
     def test_reads_support_blurb_from_each_portal(self):
-        for role, _g, _ns, _a, setting in PORTALS:
-            with self.subTest(role=role), \
-                    patch(f'{setting}.from_db', return_value={'support_blurb': BLURB}):
+        for role, *_ in PORTALS:
+            with self.subTest(role=role), _text(role, {'support_blurb': BLURB}):
                 self.assertEqual(portal_text.page_blurb(role), BLURB)
 
-    def test_blank_missing_or_unreadable_gives_empty(self):
-        setting = PORTALS[0][4]
-        for stored in ({}, {'support_blurb': '   '}, None, ['x'], 'x',
+    def test_blank_or_placeholder_gives_empty(self):
+        for stored in ({}, {'support_blurb': '   '},
                        {'support_blurb': 'Change me'},
                        {'support_blurb': 'Change this in Settings -> Student -> Portal Language'}):
-            with patch(f'{setting}.from_db', return_value=stored):
+            with _text('highschool_admin', stored):
                 self.assertEqual(portal_text.page_blurb('highschool_admin'), '')
-        with patch(f'{setting}.from_db', side_effect=RuntimeError('boom')):
-            self.assertEqual(portal_text.page_blurb('highschool_admin'), '')
 
     def test_unknown_role_gives_empty(self):
         self.assertEqual(portal_text.page_blurb('ce'), '')
+
+
+class OlderCisFallbackTests(TestCase):
+    """On a cis without cis.portal_text.page_heading/page_blurb."""
+
+    def _no_cis_helpers(self, portal_text_fn=None):
+        return patch.object(portal_text, '_cis_helper',
+                            side_effect=lambda name: portal_text_fn if name == 'portal_text' else None)
+
+    def test_heading_from_the_menu(self):
+        with self._no_cis_helpers(), \
+                patch('cis.menu.get_role_menu', return_value=_menu('Bulk Form Upload')):
+            self.assertEqual(portal_text.renamed_label('highschool_admin'), 'Bulk Form Upload')
+        with self._no_cis_helpers(), \
+                patch('cis.menu.get_role_menu', return_value=_menu('Support Requests')):
+            self.assertIsNone(portal_text.renamed_label('student'))
+
+    def test_instructor_text_follows_the_owning_package(self):
+        """cis#82: instructor text lives in package-instructor_portal when installed."""
+        owned = lambda name: {'support_blurb': f'from {name}'}
+        with self._no_cis_helpers(owned):
+            self.assertEqual(portal_text.page_blurb('instructor'), 'from instructor_portal')
+
+    def test_hs_admin_text_from_cis_setting(self):
+        with self._no_cis_helpers(), \
+                patch(f'{PORTALS[0][4]}.from_db', return_value={'support_blurb': BLURB}):
+            self.assertEqual(portal_text.page_blurb('highschool_admin'), BLURB)
+
+    def test_bad_or_unreadable_text_gives_empty(self):
+        for stored in (None, ['x'], 'x', {'support_blurb': 'Change me'}):
+            with self._no_cis_helpers(), \
+                    patch.object(portal_text, '_stored_text', return_value=stored):
+                self.assertEqual(portal_text.page_blurb('student'), '')
+        with self._no_cis_helpers(), \
+                patch.object(portal_text, '_stored_text', side_effect=RuntimeError('boom')):
+            self.assertEqual(portal_text.page_blurb('student'), '')
 
 
 class PortalPagesTests(TestCase):
@@ -126,8 +169,7 @@ class PortalPagesTests(TestCase):
                 c = _login(user)
                 with patch('cis.menu.get_role_menu',
                            return_value=_menu('Bulk Form Upload')), \
-                        patch(f'{setting}.from_db',
-                              return_value={'support_blurb': BLURB}), \
+                        _text(role, {'support_blurb': BLURB}), \
                         patch.object(STS, 'can_start', return_value=True):
                     index = self._get(c, ns, 'requests')
                     add = self._get(c, ns, 'add_new')
@@ -148,7 +190,7 @@ class PortalPagesTests(TestCase):
                 c = _login(user)
                 with patch('cis.menu.get_role_menu',
                            return_value=_menu('Support Requests')), \
-                        patch(f'{setting}.from_db', return_value={}):
+                        _text(role, {}):
                     index = self._get(c, ns, 'requests')
                 self.assertEqual(index.status_code, 200)
                 self.assertContains(index, 'Support Requests&nbsp;')

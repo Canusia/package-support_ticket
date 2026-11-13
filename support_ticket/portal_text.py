@@ -3,6 +3,9 @@
 Staff can rename the ``support`` menu item (Settings → Menu Layout) and save
 header text for it in the role's portal settings, under ``support_blurb``
 (each portal's settings form keys its fields ``<menu item name>_blurb``).
+
+cis v0.2.10a has one shared copy of both lookups (``cis.portal_text.page_heading``
+/ ``page_blurb``); this module uses it when present and keeps its own for older cis.
 """
 import importlib
 import logging
@@ -12,12 +15,21 @@ log = logging.getLogger(__name__)
 MENU_ITEM = 'support'
 STOCK_LABEL = 'Support Requests'   # the label menu.py registers
 
-# role → the cis portal setting that holds its page text.
+# role → the cis portal setting that holds its page text (older cis only).
 PORTAL_SETTINGS = {
     'highschool_admin': 'cis.settings.highschool_admin_portal.highschool_admin_portal',
     'instructor': 'cis.settings.instructor_portal.instructor_portal',
     'student': 'cis.settings.student_portal.student_portal',
 }
+
+
+def _cis_helper(name):
+    """``cis.portal_text.<name>``, or None on a cis without it."""
+    try:
+        module = importlib.import_module('cis.portal_text')
+    except Exception:
+        return None
+    return getattr(module, name, None)
 
 
 def renamed_label(role):
@@ -26,6 +38,9 @@ def renamed_label(role):
     None also when the item is not in the menu, has no label, or the menu
     cannot be read, so callers keep their built-in text.
     """
+    cis_heading = _cis_helper('page_heading')
+    if cis_heading is not None:
+        return cis_heading(role, MENU_ITEM, None)
     try:
         from cis.menu import get_role_menu
         # A renamed item staff hid is still reachable by URL; keep its label.
@@ -53,16 +68,28 @@ def page_heading(role, default=STOCK_LABEL):
     return renamed_label(role) or default
 
 
+def _stored_text(role):
+    """The role's stored portal text (a dict), read the way this cis allows."""
+    # Instructor text belongs to package-instructor_portal when it is
+    # installed (cis#82); cis.portal_text.portal_text() follows the owner.
+    owned = _cis_helper('portal_text')
+    if role == 'instructor' and owned is not None:
+        return owned('instructor_portal')
+    module_path, cls_name = PORTAL_SETTINGS[role].rsplit('.', 1)
+    return getattr(importlib.import_module(module_path), cls_name).from_db()
+
+
 def page_blurb(role):
     """The ``support_blurb`` saved in the role's portal settings, or ''."""
-    path = PORTAL_SETTINGS.get(role)
-    if not path:
+    if role not in PORTAL_SETTINGS:
         return ''
-    module_path, cls_name = path.rsplit('.', 1)
+    cis_blurb = _cis_helper('page_blurb')
+    if cis_blurb is not None:
+        return cis_blurb(role, MENU_ITEM)
     try:
-        stored = getattr(importlib.import_module(module_path), cls_name).from_db()
+        stored = _stored_text(role)
     except Exception:
-        log.exception('support_ticket: could not read %s', path)
+        log.exception('support_ticket: could not read the %s portal text', role)
         return ''
     if not isinstance(stored, dict):
         return ''
