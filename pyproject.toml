@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "myce-support-ticket"
-version = "1.2.1"
+version = "1.2.2"
 description = "MyCE - Support Tickets"
 requires-python = ">=3.8"
 # Declared here, not only in setup.cfg: this [project] table has no

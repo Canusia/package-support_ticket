@@ -5,6 +5,11 @@ Releases are git-tag-driven: pin a tag in the host's `webapp/requirements.txt`
 (`git+https://github.com/Canusia/package-support_ticket.git@vX.Y.Z`). The
 declared version in `setup.cfg` and `pyproject.toml` always matches the tag.
 
+## v1.2.2 — 2026-11-13
+
+- **Instructor page text follows package-instructor_portal** (cis#82): v1.2.1 read the instructor `support_blurb` from cis's deprecated copy.
+- Uses cis's shared `cis.portal_text.page_heading` / `page_blurb` (cis v0.2.10a) when present. No migrations.
+
 ## v1.2.1 — 2026-11-13
 
 - **Support pages follow the renamed menu item (#8).** A renamed Support Requests menu item (Settings → Menu Layout) now renames the student, instructor and HS admin support pages (list "<label>", add "<label> — New", detail "<label>"). Unrenamed tenants keep "Support Requests".
